@@ -48,11 +48,12 @@ function deleteMessage(msg, alertOnFailure) {
 
 bot.on('message', (msg) => {
     console.log(msg);
-    const chatId = msg.chat.id;
+    var chatId = msg.chat.id;
+    var fromId = msg.from.id;
     if (msg.chat.type == 'group' || msg.chat.type == 'supergroup')
         chatsList[chatId] ? null : chatsList[chatId] = {};
     if (msg.chat.type == 'private') {
-        if (msg.from.id == config.admin) {
+        if (fromId == config.admin) {
             if (msg.text == '/stats') {
                 let count = 0;
                 for (let key in chatsList)
@@ -71,33 +72,33 @@ bot.on('message', (msg) => {
                 break;
             case '/on':
             case '/on@AntiChannelSpammersBot':
-                bot.getChatMember(chatId, msg.from.id).then(function (result) {
+                bot.getChatMember(chatId, fromId).then(function (result) {
                     if (result.status == 'creator' || result.status == 'administrator' || result.user.username == 'GroupAnonymousBot') {
                         chatsList[chatId].delete = true;
                         fs.writeFileSync('chatsList.json', JSON.stringify(chatsList));
                         bot.sendMessage(chatId, '已在本群启用自动删除频道马甲发送的消息。\n\n您需要将我设置为管理员，并分配删除消息的权限。您可以发送 /config 查看相关设置。');
                     }
                     else
-                        bot.sendMessage(chatId, '<a href="tg://user?id=' + msg.from.id + '">您</a>不是群主或管理员。', { parse_mode: 'HTML' });
+                        bot.sendMessage(chatId, '<a href="tg://user?id=' + fromId + '">您</a>不是群主或管理员。', { parse_mode: 'HTML' });
                     deleteMessage(msg, false);
                 });
                 break;
             case '/off':
             case '/off@AntiChannelSpammersBot':
-                bot.getChatMember(chatId, msg.from.id).then(function (result) {
+                bot.getChatMember(chatId, fromId).then(function (result) {
                     if (result.status == 'creator' || result.status == 'administrator' || result.user.username == 'GroupAnonymousBot') {
                         chatsList[chatId].delete = false;
                         fs.writeFileSync('chatsList.json', JSON.stringify(chatsList));
                         bot.sendMessage(chatId, '已停止自动删除频道马甲发送的消息。');
                     }
                     else
-                        bot.sendMessage(chatId, '<a href="tg://user?id=' + msg.from.id + '">您</a>不是群主或管理员。', { parse_mode: 'HTML' });
+                        bot.sendMessage(chatId, '<a href="tg://user?id=' + fromId + '">您</a>不是群主或管理员。', { parse_mode: 'HTML' });
                     deleteMessage(msg, false);
                 });
                 break;
             case '/config':
             case '/config@AntiChannelSpammersBot':
-                bot.getChatMember(chatId, msg.from.id).then(function (result) {
+                bot.getChatMember(chatId, fromId).then(function (result) {
                     if (result.status == 'creator' || result.status == 'administrator' || result.user.username == 'GroupAnonymousBot') {
                         bot.sendMessage(chatId, '⚙️ 设置', {
                             reply_markup: {
@@ -106,14 +107,15 @@ bot.on('message', (msg) => {
                         });
                     }
                     else
-                        bot.sendMessage(chatId, '<a href="https://t.me/user?id=' + msg.from.id + '">您</a>不是群主或管理员。', { parse_mode: 'HTML' });
+                        bot.sendMessage(chatId, '<a href="https://t.me/user?id=' + fromId + '">您</a>不是群主或管理员。', { parse_mode: 'HTML' });
                     deleteMessage(msg, false);
                 });
+                break;
             default:
                 break;
         }
     }
-    if (msg.from.id == 777000) { // 频道身份的消息，也可以用 sender_chat
+    if (fromId == 777000) { // 频道身份的消息，也可以用 sender_chat
         if (msg.is_automatic_forward) { // 关联频道转过来的消息
             chatsList[chatId].deleteChannelMessage ? deleteMessage(msg, true) : null;
         }
