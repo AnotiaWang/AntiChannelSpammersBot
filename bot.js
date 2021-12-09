@@ -46,6 +46,8 @@ function deleteMessage(msg, alertOnFailure) {
     });
 }
 
+function saveData() { fs.writeFileSync('chatsList.json', JSON.stringify(chatsList)); }
+
 bot.on('message', (msg) => {
     var chatId = msg.chat.id;
     var fromId = msg.from.id;
@@ -64,6 +66,16 @@ bot.on('message', (msg) => {
             bot.sendMessage(msg.chat.id, '请在群组中使用。');
         return;
     }
+    if (msg.new_chat_members)
+        for (let x in msg.new_chat_members) {
+            if (msg.new_chat_members[x].username == config.bot)
+                bot.sendMessage(chatId, '欢迎使用！您可以发送 /on 或 /off 一键开启和关闭服务，或者发送 /config 进行详细的设置。');
+        }
+    else if (msg.left_chat_member && msg.left_chat_member.username == config.bot) {
+        delete chatsList[chatId];
+        console.log('群组 ' + chatId + ' 已被移除。');
+        saveData();
+    }
     if (msg.text) {
         switch (msg.text) {
             case '/start':
@@ -74,7 +86,7 @@ bot.on('message', (msg) => {
                 bot.getChatMember(chatId, fromId).then(function (result) {
                     if (result.status == 'creator' || result.status == 'administrator' || result.user.username == 'GroupAnonymousBot') {
                         chatsList[chatId].delete = true;
-                        fs.writeFileSync('chatsList.json', JSON.stringify(chatsList));
+                        saveData();
                         bot.sendMessage(chatId, '已在本群启用自动删除频道马甲发送的消息。\n\n您需要将我设置为管理员，并分配删除消息的权限。您可以发送 /config 查看相关设置。');
                     }
                     else
@@ -87,7 +99,7 @@ bot.on('message', (msg) => {
                 bot.getChatMember(chatId, fromId).then(function (result) {
                     if (result.status == 'creator' || result.status == 'administrator' || result.user.username == 'GroupAnonymousBot') {
                         chatsList[chatId].delete = false;
-                        fs.writeFileSync('chatsList.json', JSON.stringify(chatsList));
+                        saveData();
                         bot.sendMessage(chatId, '已停止自动删除频道马甲发送的消息。');
                     }
                     else
@@ -152,9 +164,10 @@ bot.on('callback_query', (query) => {
                 default:
                     break;
             }
-            fs.writeFileSync('chatsList.json', JSON.stringify(chatsList));
+            saveData();
             bot.editMessageText('⚙️ 设置', { chat_id: chatId, message_id: query.message.message_id, reply_markup: { inline_keyboard: generateKeyboard(chatId) } });
         }
-        else { bot.answerCallbackQuery(query.id, { text: '您不是群主或管理员，再点我要摇人啦！', show_alert: true }); return; }
+        else
+            bot.answerCallbackQuery(query.id, { text: '您不是群主或管理员，再点我要摇人啦！', show_alert: true });
     });
 });
