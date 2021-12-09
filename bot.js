@@ -47,7 +47,6 @@ function deleteMessage(msg, alertOnFailure) {
 }
 
 bot.on('message', (msg) => {
-    console.log(msg);
     var chatId = msg.chat.id;
     var fromId = msg.from.id;
     if (msg.chat.type == 'group' || msg.chat.type == 'supergroup')
@@ -130,7 +129,6 @@ bot.on('message', (msg) => {
 
 bot.on('callback_query', (query) => {
     const chatId = query.message.chat.id;
-    // console.log(query);
     if (query.message.chat.type == 'group' || query.message.chat.type == 'supergroup')
         chatsList[chatId] ? null : chatsList[chatId] = {};
     bot.getChatMember(query.message.chat.id, query.from.id).then(function (result) {
