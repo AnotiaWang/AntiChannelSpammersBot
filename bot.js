@@ -71,8 +71,14 @@ bot.on('message', (msg) => {
                 bot.sendMessage(chatId, '被拉入过的群组：{g} 个\n启用功能的群组：{e} 个'.replace('{g}', Object.keys(chatsList).length).replace('{e}', count));
             }
         }
+        if (msg.text == '/start')
+            bot.sendMessage(chatId, '<b>欢迎使用！</b>\n\n本机器人的功能在群组中有效，请将我添加至群组。\n\n源代码：<a href="https://github.com/AnotiaWang/AntiChannelSpammersBot">GitHub</a>', {
+                parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: {
+                    inline_keyboard: [[{ text: '点此将我添加到群组', url: 'https://telegram.me/' + config.bot + '?startgroup=true' }]]
+                }
+            });
         else
-            bot.sendMessage(msg.chat.id, '请在群组中使用。');
+            bot.sendMessage(chatId, '请在群组中使用。');
         return;
     }
     else if (msg.chat.type == 'group' || msg.chat.type == 'supergroup') {
@@ -80,7 +86,7 @@ bot.on('message', (msg) => {
         if (msg.new_chat_members)
             for (let x in msg.new_chat_members) {
                 if (msg.new_chat_members[x].username == config.bot) {
-                    bot.sendMessage(chatId, '欢迎使用！您可以发送 /on 或 /off 一键开启和关闭服务，或者发送 /config 进行详细的设置。');
+                    bot.sendMessage(chatId, '欢迎使用！您可以发送 /on 或 /off 一键开启和关闭服务，或者发送 /config 进行详细的设置。用法详见 /help。');
                     if (chatsList[chatId] == undefined) chatsList[chatId] = {};
                 }
             }
