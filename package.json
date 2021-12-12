@@ -1,11 +1,12 @@
 {
   "name": "antichannelspammersbot",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "A Telegram bot that can delete messages from users appearing as channels, also messages from anonymous admins and the linked channels.",
   "main": "bot.js",
   "dependencies": {
+    "@types/node-telegram-bot-api": "^0.53.2",
     "express": "^4.17.1",
-    "node-telegram-bot-api": "^0.54.0"
+    "node-telegram-bot-api": "^0.56.0"
   },
   "devDependencies": {},
   "scripts": {
