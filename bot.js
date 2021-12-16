@@ -69,6 +69,7 @@ bot.on('message', (msg) => {
                 for (let key in chatsList)
                     if (chatsList[key].delete) count++;
                 bot.sendMessage(chatId, '被拉入过的群组：{g} 个\n启用功能的群组：{e} 个'.replace('{g}', Object.keys(chatsList).length).replace('{e}', count));
+                return;
             }
         }
         if (msg.text == '/start')
@@ -195,7 +196,7 @@ bot.on('message', (msg) => {
             }
         }
         if (msg.sender_chat) {
-            if (chatsList[chatId].whitelist && chatsList[chatId].whitelist.includes(msg.sender_chat.id))
+            if (chatsList[chatId].whitelist && chatsList[chatId].whitelist.includes(msg.sender_chat.id.toString()))
                 return;
             if (msg.from.username == 'Channel_Bot') { // 频道身份的消息，也可以用 sender_chat
                 if (msg.is_automatic_forward)  // 关联频道转过来的消息
