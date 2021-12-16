@@ -1,0 +1,19 @@
+{
+    "stats": "被拉入过的群组：{g} 个\n启用功能的群组：{e} 个",
+    "welcome_private": "<b>欢迎使用！</b>\n\n本机器人的功能在群组中有效，请将我添加至群组。\n\n源代码：<a href=\"https://github.com/AnotiaWang/AntiChannelSpammersBot\">GitHub</a>",
+    "welcome_group": "欢迎使用！您可以发送 /on 或 /off 一键开启和关闭服务，或者发送 /config 进行详细的设置。用法详见 /help。",
+    "add_to_group": "点此将我添加到群组",
+    "group_only": "请在群组中使用。",
+    "del_channel_message_on": "已在本群启用自动删除频道马甲发送的消息。\n\n您需要将我设置为管理员，并分配删除消息的权限。您可以发送 /config 查看相关设置，发送 /help 查看功能帮助。",
+    "del_channel_message_off": "已停止自动删除频道马甲发送的消息。其它设置项未变，您可以在 /config 设置中更改。",
+    "operator_not_admin": "<a href=\"tg://user?id={id}\">您</a>不是群主或管理员。",
+    "help_group": "<b>使用帮助</b>\n\n<b> - /on:</b> 启用全局服务\n\n<b> - /off:</b> 关闭全局服务\n\n<b> - /promote:</b> 回复一个频道发送的信息，将其添加到白名单。也可以单独发送 <code>/promote [频道 UID/username]</code> 来授权。\n\n<b> - /demote:</b> 回复一条频道发送的信息，将其移出白名单。也可以单独发送 <code>/demote [频道 UID/username]</code> 来移出。\n\n<b> - /config:</b> 显示此群组的配置：\n    - 开关 “删除频道马甲的消息”；\n    - 开关 “删除群管匿名发送的消息”；\n    - 开关 “删除来自关联频道的消息”；\n    - 查看和编辑白名单\n\n加白名单频道支持以下方式，删除同理：\n  - 使用 <code>/promote</code> 回复一条来自频道马甲的消息；\n  - 发送 <code>/promote UID</code> (UID 形如 \"-xxxxxxxxx\")\n  - 发送 <code>/promote @username</code> (公开频道的用户名)\n\n本机器人基于 GPLv3 协议开源，源码发布于 <a href=\"https://github.com/AnotiaWang/AntiChannelSpammersBot\">GitHub</a>。",
+    "x_added_to_whitelist": "已将 \"{x}\" ({id}) 添加到白名单。",
+    "x_removed_from_whitelist": "已将 \"{x}\" ({id}) 从白名单中移除。",
+    "x_already_in_whitelist": "该频道已在白名单中。",
+    "x_not_in_whitelist": "该频道不在白名单中。",
+    "x_not_a_channel": "被回复的消息不是来自频道，无法添加或删除。",
+    "get_channel_error": "查询失败：指定的目标频道不存在，或不是频道。请检查您的格式。请以频道 UID(-xxxxxxxx) 或 username(@xxxxx，对于公开频道) 作为命令参数。",
+    "whitelist_help": "<b>白名单</b>\n\n点击按钮取消对应频道的授权。\n\n加白名单频道支持以下方式，删除同理：\n  - 使用 <code>/promote</code> 回复一条来自频道马甲的消息；\n  - 发送 <code>/promote UID</code> (UID 形如 \"-xxxxxxxxx\")\n  - 发送 <code>/promote @username</code> (公开频道的用户名)",
+    "query_sender_not_admin": "您不是群主或管理员，再点我要摇人啦！"
+}

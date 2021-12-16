@@ -1,5 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const config = require('./config.json');
+const strings = require('./strings.json');
 const fs = require('fs');
 const express = require('express');
 const bot = new TelegramBot(config.token);
@@ -35,14 +36,17 @@ var chatsList = fs.existsSync('chatsList.json') ? JSON.parse(fs.readFileSync('ch
 function generateKeyboard(chatId, isWhitelist) {
     var keyboard = [];
     if (isWhitelist) {
-        let whitelist = chatsList[chatId].whitelist || [];
-        for (let channel of whitelist)
-            keyboard.push([{ text: channel, callback_data: 'demote_' + channel }]);
-        keyboard.push([{ text: '🔙 返回', callback_data: 'back' }]);
+        let whitelist = chatsList[chatId].whitelist || {};
+        for (let channel in whitelist)
+            keyboard.push([{ text: chatsList[chatId].whitelist[channel], callback_data: 'demote_' + channel }]);
+        if (Object.keys(whitelist).length == 0)
+            keyboard.push([{ text: '（当前无白名单）🔙 返回', callback_data: 'back' }]);
+        else
+            keyboard.push([{ text: '🔙 返回', callback_data: 'back' }]);
     }
     else {
-        keyboard.push([{ text: '删除频道马甲发送的消息：' + (chatsList[chatId].delete ? '✅' : '❌'), callback_data: 'switch' }]);
-        keyboard.push([{ text: '删除群管匿名发送的消息：' + (chatsList[chatId].deleteAnonymousMessage ? '✅' : '❌'), callback_data: 'deleteAnonymousMessage' }]);
+        keyboard.push([{ text: '删除频道马甲消息：' + (chatsList[chatId].delete ? '✅' : '❌'), callback_data: 'switch' }]);
+        keyboard.push([{ text: '删除匿名管理消息：' + (chatsList[chatId].deleteAnonymousMessage ? '✅' : '❌'), callback_data: 'deleteAnonymousMessage' }]);
         keyboard.push([{ text: '删除来自关联频道的消息：' + (chatsList[chatId].deleteChannelMessage ? '✅' : '❌'), callback_data: 'deleteChannelMessage' }]);
         keyboard.push([{ text: '频道白名单', callback_data: 'whitelist' }]);
         keyboard.push([{ text: '删除此消息', callback_data: 'deleteMsg' }]);
@@ -56,58 +60,68 @@ function deleteMessage(msg, alertOnFailure) {
             bot.sendMessage(msg.chat.id, '尝试删除消息（ID ' + msg.message_id + '）失败！可能是我没有删除消息的权限，或者消息已被删除。');
     });
 }
+// 判断一个用户是不是群组的管理员
+function isAdmin(searchResult) {
+    if (searchResult.status == 'creator' || searchResult.status == 'administrator' || searchResult.user.username == 'GroupAnonymousBot')
+        return true;
+    else return false;
+}
 
 function saveData() { fs.writeFileSync('chatsList.json', JSON.stringify(chatsList)); }
 
 bot.on('message', (msg) => {
     var chatId = msg.chat.id;
     var fromId = msg.from.id;
+    // 私聊部分，可用的命令很少
     if (msg.chat.type == 'private') {
         if (fromId == config.admin) {
             if (msg.text == '/stats') {
                 let count = 0;
                 for (let key in chatsList)
                     if (chatsList[key].delete) count++;
-                bot.sendMessage(chatId, '被拉入过的群组：{g} 个\n启用功能的群组：{e} 个'.replace('{g}', Object.keys(chatsList).length).replace('{e}', count));
+                bot.sendMessage(chatId, strings.stats.replace('{g}', Object.keys(chatsList).length).replace('{e}', count));
                 return;
             }
         }
         if (msg.text == '/start')
-            bot.sendMessage(chatId, '<b>欢迎使用！</b>\n\n本机器人的功能在群组中有效，请将我添加至群组。\n\n源代码：<a href="https://github.com/AnotiaWang/AntiChannelSpammersBot">GitHub</a>', {
+            bot.sendMessage(chatId, strings.welcome_private, {
                 parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: {
-                    inline_keyboard: [[{ text: '点此将我添加到群组', url: 'https://telegram.me/' + config.bot + '?startgroup=true' }]]
+                    inline_keyboard: [[{ text: strings.add_to_group, url: 'https://telegram.me/' + config.bot + '?startgroup=true' }]]
                 }
             });
+        else if (msg.text == '/help')
+            bot.sendMessage(chatId, strings.help_group, { parse_mode: 'HTML', disable_web_page_preview: true });
         else
-            bot.sendMessage(chatId, '请在群组中使用。');
+            bot.sendMessage(chatId, strings.group_only);
         return;
     }
+    // 群组部分
     else if (msg.chat.type == 'group' || msg.chat.type == 'supergroup') {
         chatsList[chatId] ? null : chatsList[chatId] = {};
+        // 机器人被拉进群组
         if (msg.new_chat_members)
             for (let x in msg.new_chat_members) {
                 if (msg.new_chat_members[x].username == config.bot) {
-                    bot.sendMessage(chatId, '欢迎使用！您可以发送 /on 或 /off 一键开启和关闭服务，或者发送 /config 进行详细的设置。用法详见 /help。');
+                    bot.sendMessage(chatId, strings.welcome_group);
                     if (chatsList[chatId] == undefined) chatsList[chatId] = {};
                 }
             }
+        // 机器人被踢出群组，清理配置文件
         else if (msg.left_chat_member && msg.left_chat_member.username == config.bot) {
             delete chatsList[chatId];
             console.log('群组 ' + chatId + ' 已被移除。');
             saveData();
             return;
         }
+        // 调整群组的功能设置
         if (msg.text) {
             switch (msg.text) {
-                case '/start':
-                    bot.sendMessage(chatId, '欢迎，请在群组中使用。');
-                    break;
-                case '/on':
+                case '/on': // 开启功能
                 case '/on@' + config.bot:
                     bot.getChatMember(chatId, fromId).then(function (result) {
-                        if (result.status == 'creator' || result.status == 'administrator' || result.user.username == 'GroupAnonymousBot') {
+                        if (isAdmin(result)) {
                             chatsList[chatId].delete = true;
-                            bot.sendMessage(chatId, '已在本群启用自动删除频道马甲发送的消息。\n\n您需要将我设置为管理员，并分配删除消息的权限。您可以发送 /config 查看相关设置，发送 /help 查看功能帮助。');
+                            bot.sendMessage(chatId, strings.del_channel_message_on);
                             saveData();
                         }
                         else
@@ -115,23 +129,23 @@ bot.on('message', (msg) => {
                         deleteMessage(msg, false);
                     });
                     break;
-                case '/off':
+                case '/off': // 关闭功能
                 case '/off@' + config.bot:
                     bot.getChatMember(chatId, fromId).then(function (result) {
-                        if (result.status == 'creator' || result.status == 'administrator' || result.user.username == 'GroupAnonymousBot') {
+                        if (isAdmin(result)) {
                             chatsList[chatId].delete = false;
-                            bot.sendMessage(chatId, '已停止自动删除频道马甲发送的消息。其它设置项未变，您可以在 /config 设置中更改。');
+                            bot.sendMessage(chatId, strings.del_channel_message_off);
                             saveData();
                         }
                         else
-                            bot.sendMessage(chatId, '<a href="tg://user?id=' + fromId + '">您</a>不是群主或管理员。', { parse_mode: 'HTML' });
+                            bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' });
                         deleteMessage(msg, false);
                     });
                     break;
-                case '/config':
+                case '/config': // 显示群组相关配置
                 case '/config@' + config.bot:
                     bot.getChatMember(chatId, fromId).then(function (result) {
-                        if (result.status == 'creator' || result.status == 'administrator' || result.user.username == 'GroupAnonymousBot') {
+                        if (isAdmin(result)) {
                             bot.sendMessage(chatId, '<b>⚙️ 设置</b>', {
                                 parse_mode: 'HTML',
                                 reply_markup: {
@@ -140,13 +154,18 @@ bot.on('message', (msg) => {
                             });
                         }
                         else
-                            bot.sendMessage(chatId, '<a href="https://t.me/user?id=' + fromId + '">您</a>不是群主或管理员。', { parse_mode: 'HTML' });
+                            bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' });
                         deleteMessage(msg, false);
                     });
                     break;
-                case '/help':
+                case '/help': // 显示帮助信息
                 case '/help@' + config.bot:
-                    bot.sendMessage(chatId, '<b>帮助</b>\n\n<b> - /on:</b> 启用全局服务\n<b> - /off:</b> 关闭全局服务\n<b> - /promote:</b> 回复一个频道发送的信息，将其添加到白名单。也可以单独发送 <code>/promote [频道 ID]</code> 来授权。\n<b> - /demote:</b> 回复一条频道发送的信息，将其移出白名单。也可以单独发送 <code>/demote [频道 ID]</code> 来移出。\n<b> - /config:</b> 显示此群组的配置：\n    - 开关 “删除频道马甲的消息”；\n    - 开关 “删除群管匿名发送的消息”；\n    - 开关 “删除来自关联频道的消息”；\n    - 查看和编辑白名单\n\n本机器人基于 GPLv3 协议开源，源码发布于 <a href="https://github.com/AnotiaWang/AntiChannelSpammersBot">GitHub</a>。', { parse_mode: 'HTML', disable_web_page_preview: true });
+                    bot.getChatMember(chatId, fromId).then(function (result) {
+                        if (isAdmin(result))
+                            bot.sendMessage(chatId, strings.help_group, { parse_mode: 'HTML', disable_web_page_preview: true });
+                        else
+                            bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' });
+                    });
                     deleteMessage(msg, false);
                     break;
                 default:
@@ -154,49 +173,60 @@ bot.on('message', (msg) => {
             }
             if (msg.text.startsWith('/promote') || msg.text.startsWith('/demote')) {
                 bot.getChatMember(chatId, fromId).then(function (result) {
-                    if (result.status == 'creator' || result.status == 'administrator' || result.user.username == 'GroupAnonymousBot') {
-                        let promote = msg.text.startsWith('/promote') ? true : false;
-                        let text = '', oprChatId;
-                        chatsList[chatId].whitelist = chatsList[chatId].whitelist || [];
-                        // 如果是用户，则提示身份不对；如果有参数，则添加参数；如果是回复一条消息，则判断是不是chat，不是则报错
+                    if (isAdmin(result)) {
+                        let isPromote = msg.text.startsWith('/promote') ? true : false;
+                        let queryChat, oprChatId;
+                        chatsList[chatId].whitelist = chatsList[chatId].whitelist || {};
+                        // 如果回复消息，则查询被回复消息的发送者
                         if (msg.reply_to_message) {
-                            if (msg.reply_to_message.sender_chat) {
-                                oprChatId = '' + msg.reply_to_message.sender_chat.id;
-                                let canOperate = promote ? (!chatsList[chatId].whitelist.includes(oprChatId)) : chatsList[chatId].whitelist.includes(oprChatId);
-                                if (canOperate) {
-                                    text = '已将该频道 ({c}) ' + (promote ? '添加到白名单中。' : '从白名单中移除。');
-                                    promote ? chatsList[chatId].whitelist.push(oprChatId) : chatsList[chatId].whitelist.splice(chatsList[chatId].whitelist.indexOf(oprChatId), 1);
-                                }
-                                else
-                                    text = '该频道' + (promote ? '已' : '不') + '在白名单中。';
+                            if (msg.reply_to_message.sender_chat)
+                                queryChat = '' + msg.reply_to_message.sender_chat.id;
+                            else {
+                                bot.sendMessage(chatId, strings.x_not_a_channel);
+                                return;
                             }
-                            else text = '被回复的用户不是频道，无法' + (promote ? '添加。' : '移除。');
                         }
+                        // 分割出命令中的参数
                         else {
                             let args = msg.text.split(' ');
-                            if (args.length == 2) {
-                                oprChatId = args[1];
-                                let canOperate = promote ? (!chatsList[chatId].whitelist.includes(oprChatId)) : chatsList[chatId].whitelist.includes(oprChatId);
-                                if (canOperate) {
-                                    text = '已将该频道 ({c}) ' + (promote ? '添加到白名单中。' : '从白名单中移除。');
-                                    chatsList[chatId].whitelist.push(oprChatId);
-                                }
-                                else
-                                    text = '该频道' + (promote ? '已' : '不') + '在白名单中。';
+                            if (args.length == 2)
+                                queryChat = args[1];
+                            else {
+                                bot.sendMessage(chatId, '请回复一条消息，或者使用 ' + (isPromote ? '/promote' : '/demote') + ' [频道 UID/username] 来' + (isPromote ? '添加' : '移除') + '频道。');
+                                return;
                             }
-                            else text = '请回复一条消息，或者使用 ' + (promote ? '/promote' : '/demote') + ' [频道 ID] 来' + (promote ? '添加' : '移除') + '频道。';
                         }
-                        bot.sendMessage(chatId, text.replace('{c}', oprChatId), { parse_mode: 'HTML' });
-                        saveData();
+                        // 查询
+                        bot.getChat(queryChat).then(function (result) {
+                            if (result.type != 'channel') // 防止误操作
+                                throw new Error('Not a Channel');
+                            oprChatId = result.id.toString();
+                            //  白名单中是否已有该频道，是否可以进一步操作
+                            let canOperate = (!chatsList[chatId].whitelist[oprChatId] && isPromote) || (chatsList[chatId].whitelist[oprChatId] && !isPromote);
+                            if (canOperate) {
+                                if (isPromote) {
+                                    chatsList[chatId].whitelist[oprChatId] = result.title;
+                                    bot.sendMessage(chatId, strings.x_added_to_whitelist.replace('{x}', result.title).replace('{id}', oprChatId));
+                                }
+                                else {
+                                    delete chatsList[chatId].whitelist[oprChatId];
+                                    bot.sendMessage(chatId, strings.x_removed_from_whitelist.replace('{x}', result.title).replace('{id}', oprChatId));
+                                }
+                                saveData();
+                            }
+                            else
+                                bot.sendMessage(chatId, isPromote ? strings.x_already_in_whitelist : strings.x_not_in_whitelist);
+                        }).catch(() => { bot.sendMessage(chatId, strings.get_channel_error) });
                     }
                     else
-                        bot.sendMessage(chatId, '<a href="tg://user?id=' + fromId + '">您</a>不是群主或管理员。', { parse_mode: 'HTML' });
+                        bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' });
                     deleteMessage(msg, false);
                 });
             }
         }
+        // 清理消息部分
         if (msg.sender_chat) {
-            if (chatsList[chatId].whitelist && chatsList[chatId].whitelist.includes(msg.sender_chat.id.toString()))
+            if (chatsList[chatId].whitelist && chatsList[chatId].whitelist[msg.sender_chat.id.toString()])
                 return;
             if (msg.from.username == 'Channel_Bot') { // 频道身份的消息，也可以用 sender_chat
                 if (msg.is_automatic_forward)  // 关联频道转过来的消息
@@ -210,47 +240,49 @@ bot.on('message', (msg) => {
     }
 });
 
+// 响应回调查询
 bot.on('callback_query', (query) => {
     const chatId = query.message.chat.id;
     if (query.message.chat.type == 'group' || query.message.chat.type == 'supergroup')
         chatsList[chatId] ? null : chatsList[chatId] = {};
     bot.getChatMember(query.message.chat.id, query.from.id).then(function (result) {
-        if (result.status == 'creator' || result.status == 'administrator' || result.user.username == 'GroupAnonymousBot') { // 管理员
+        if (isAdmin(result)) { // 管理员
             let text = '<b>⚙️ 设置</b>', isWhitelist = false;
             switch (query.data) {
                 case 'switch':
                     chatsList[chatId].delete = !chatsList[chatId].delete;
-                    bot.answerCallbackQuery(query.id, { text: '已' + (chatsList[chatId].delete ? '启用' : '停用') + '自动删除频道马甲消息。', show_alert: true });
+                    bot.answerCallbackQuery(query.id, { text: '已' + (chatsList[chatId].delete ? '启用' : '停用') + '自动删除频道马甲消息。' });
                     break;
                 case 'deleteAnonymousMessage':
                     chatsList[chatId].deleteAnonymousMessage = !chatsList[chatId].deleteAnonymousMessage;
-                    bot.answerCallbackQuery(query.id, { text: '已' + (chatsList[chatId].deleteAnonymousMessage ? '启用' : '停用') + '自动删除匿名群管的消息。', show_alert: true });
+                    bot.answerCallbackQuery(query.id, { text: '已' + (chatsList[chatId].deleteAnonymousMessage ? '启用' : '停用') + '自动删除匿名群管的消息。' });
                     break;
                 case 'deleteChannelMessage':
                     chatsList[chatId].deleteChannelMessage = !chatsList[chatId].deleteChannelMessage;
-                    bot.answerCallbackQuery(query.id, { text: '已' + (chatsList[chatId].deleteChannelMessage ? '启用' : '停用') + '自动删除来自关联频道的消息。', show_alert: true });
+                    bot.answerCallbackQuery(query.id, { text: '已' + (chatsList[chatId].deleteChannelMessage ? '启用' : '停用') + '自动删除来自关联频道的消息。' });
                     break;
                 case 'deleteMsg':
                     bot.deleteMessage(chatId, query.message.message_id);
                     return;
                 case 'whitelist':
-                    text = '<b>白名单</b>\n\n点击按钮取消对应频道的授权。详细的用法请发送 /help 查看。';
+                    text = strings.whitelist_help;
                     isWhitelist = true;
                     break;
                 default:
                     break;
             }
+            // 删除白名单中的频道
             if (query.data.startsWith('demote')) {
-                bot.answerCallbackQuery(query.id, { text: '已取消对应频道的授权。', show_alert: false });
                 let demoteChatId = query.data.split('_')[1];
-                chatsList[chatId].whitelist.splice(chatsList[chatId].whitelist.indexOf(demoteChatId), 1);
-                text = '<b>白名单</b>\n\n点击按钮取消对应频道的授权。详细的用法请发送 /help 查看。';
+                bot.answerCallbackQuery(query.id, { text: strings.x_removed_from_whitelist.replace('{x}', chatsList[chatId].whitelist[demoteChatId]).replace('{id}', demoteChatId), show_alert: false });
+                text = strings.whitelist_help;
+                delete chatsList[chatId].whitelist[demoteChatId];
                 isWhitelist = true;
             }
             saveData();
             bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'HTML', reply_markup: { inline_keyboard: generateKeyboard(chatId, isWhitelist) } });
         }
         else
-            bot.answerCallbackQuery(query.id, { text: '您不是群主或管理员，再点我要摇人啦！', show_alert: true });
+            bot.answerCallbackQuery(query.id, { text: strings.query_sender_not_admin, show_alert: true });
     });
 });
