@@ -5,12 +5,23 @@ const fs = require('fs');
 const express = require('express');
 const bot = new TelegramBot(config.token);
 const app = express();
+
 if (config.webhookUrl) {
-    bot.setWebHook(`${config.webhookUrl}${config.token}`);
+    bot.setWebHook(`${config.webhookUrl}bot${config.token}`);
     app.use(express.json());
-    app.post(`/${config.token}`, (req, res) => {
+    app.post(`/bot${config.token}`, (req, res) => {
         bot.processUpdate(req.body);
         res.sendStatus(200);
+    });
+    app.get('/stats', (req, res) => {
+        res.send({
+            "schemaVersion": 1,
+            "label": "使用中群组",
+            "message": Object.keys(chatsList).length.toString() + ' 个',
+            "color": "#26A5E4",
+            "namedLogo": "Telegram",
+            "style": "flat"
+        });
     });
     app.listen(2468, () => {
         console.log(`Express server is listening on 2468`);
