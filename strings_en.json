@@ -1,0 +1,19 @@
+{
+    "stats": "Groups in the database: {g}\nGroups enabled: {e}",
+    "welcome_private": "Welcome to AntiChannelSpammersBot!\n\nThis bot is designed to help you prevent spam in Telegram channels.\n\nTo start, you need to enable it in your group. Send /help to get more information.",
+    "welcome_group": "Welcome! Send /on to enable my function.To disable it, send /off.\n\nTo get help or configure me, send /help or /config.",
+    "add_to_group": "Click here, add me to group",
+    "group_only": "Please use this command in a group.",
+    "del_channel_message_on": "Auto delete channel message enabled.\n\nYou need to set me as admin and assign delete message permission to me. You can send /config to check the settings, and send /help to check the function help.",
+    "del_channel_message_off": "Auto delete channel message disabled.\n\nOther settings not changed, you can change them in /config.",
+    "operator_not_admin": "<a href=\"tg://user?id={id}\">You</a> is not the group owner or admin.",
+    "help_group": "<b>Help</b>\n\n<b> - /on | /off:</b> Enable / Disable auto delete\n\n<b> - /promote:</b> Reply to a message from channel spamer, add it to whitelist. You can also send <code>/promote [channel UID/username]</code> to add.\n\n<b> - /demote:</b> Reply to a message from channel spamer, remove it from whitelist. You can also send <code>/demote [channel UID/username]</code> to remove.\n\n<b> - /config:</b> Show this group settings:\n    - Switch \"Delete channel spamer's message\";\n    - Switch \"Delete anonymous group message\";\n    - Switch \"Delete message from related channel\";\n    - View and edit whitelist\n\nNote: channel UID is like <code>-1234567890</code>, username is like <code>@xxxx</code> (applicable to public channel)\n\nThis bot is based on GPLv3 license, source code published at <a href=\"https://github.com/AnotiaWang/AntiChannelSpammersBot\">GitHub</a>",
+    "x_added_to_whitelist": "\"{x}\" ({id}) added to whitelist.",
+    "x_removed_from_whitelist": "\"{x}\" ({id}) removed from whitelist.",
+    "x_already_in_whitelist": "This channel is already in the whitelist.",
+    "x_not_in_whitelist": "This channel is not in whitelist.",
+    "x_not_a_channel": "The replied message is not from a channel, can't add or remove.",
+    "get_channel_error": "Query failed: The specified target is not a channel or not exist, please check your command. Please specify channel UID(<code>-123456789</code>) or username(@xxxx, for public channel).",
+    "whitelist_help": "<b>Whitelist</b>\n\nClick the button to cancel the authorization of the corresponding channel.\n\nPromote whitelist channel supports the following methods, /demote the same: \n  - Reply to a message from channel spamer, use <code>/promote</code>;\n  - Send <code>/promote UID</code> (UID is like \"-xxxxxxxxx\"), or send <code>/promote @username</code> (for public channel).",
+    "query_sender_not_admin": "401 Unauthorized: You are not the group owner or admin."
+}

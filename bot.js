@@ -34,7 +34,7 @@ else bot.startPolling();
  * @property {boolean} delete 是否开启删除功能 
  * @property {boolean} deleteAnonymousMessage 是否删除匿名发送的消息
  * @property {boolean} deleteChannelMessage 是否删除来自关联频道的消息
- * @property {array} whitelist 白名单
+ * @property {object} whitelist 白名单
  */
 var chatsList = fs.existsSync('chatsList.json') ? JSON.parse(fs.readFileSync('chatsList.json')) : {};
 
@@ -42,7 +42,7 @@ var chatsList = fs.existsSync('chatsList.json') ? JSON.parse(fs.readFileSync('ch
  * 根据群聊的设置，生成 Inline Keyboard 的文本
  * @param {number} chatId 聊天 ID
  * @param {boolean} isWhitelist 是否是白名单
- * @returns {Array<object>} Inline Keyboard
+ * @returns {Array<Array<object>>} Inline Keyboard
  */
 function generateKeyboard(chatId, isWhitelist) {
     var keyboard = [];
@@ -96,7 +96,9 @@ bot.on('message', (msg) => {
         }
         if (msg.text == '/start')
             bot.sendMessage(chatId, strings.welcome_private, {
-                parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: {
+                parse_mode: 'HTML',
+                disable_web_page_preview: true,
+                reply_markup: {
                     inline_keyboard: [[{ text: strings.add_to_group, url: 'https://telegram.me/' + config.bot + '?startgroup=true' }]]
                 }
             });
@@ -173,7 +175,13 @@ bot.on('message', (msg) => {
                 case '/help@' + config.bot:
                     bot.getChatMember(chatId, fromId).then(function (result) {
                         if (isAdmin(result))
-                            bot.sendMessage(chatId, strings.help_group, { parse_mode: 'HTML', disable_web_page_preview: true });
+                            bot.sendMessage(chatId, strings.help_group, {
+                                parse_mode: 'HTML',
+                                disable_web_page_preview: true,
+                                reply_markup: {
+                                    inline_keyboard: [[{ text: '删除此消息', callback_data: 'deleteMsg' }]]
+                                }
+                            });
                         else
                             bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' });
                     });
@@ -227,7 +235,7 @@ bot.on('message', (msg) => {
                             }
                             else
                                 bot.sendMessage(chatId, isPromote ? strings.x_already_in_whitelist : strings.x_not_in_whitelist);
-                        }).catch(() => { bot.sendMessage(chatId, strings.get_channel_error) });
+                        }).catch(() => { bot.sendMessage(chatId, strings.get_channel_error, { parse_mode: 'HTML' }); });
                     }
                     else
                         bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' });
@@ -291,7 +299,12 @@ bot.on('callback_query', (query) => {
                 isWhitelist = true;
             }
             saveData();
-            bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'HTML', reply_markup: { inline_keyboard: generateKeyboard(chatId, isWhitelist) } });
+            bot.editMessageText(text, {
+                chat_id: chatId,
+                message_id: query.message.message_id,
+                parse_mode: 'HTML',
+                reply_markup: { inline_keyboard: generateKeyboard(chatId, isWhitelist) }
+            });
         }
         else
             bot.answerCallbackQuery(query.id, { text: strings.query_sender_not_admin, show_alert: true });
