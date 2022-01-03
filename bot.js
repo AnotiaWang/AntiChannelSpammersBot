@@ -67,10 +67,22 @@ function generateKeyboard(chatId, isWhitelist) {
 
 function deleteMessage(msg, alertOnFailure) {
     bot.deleteMessage(msg.chat.id, msg.message_id).catch(() => {
-        if (alertOnFailure)
-            bot.sendMessage(msg.chat.id, '尝试删除消息（ID ' + msg.message_id + '）失败！可能是我没有删除消息的权限，或者消息已被删除。');
+        if (alertOnFailure) {
+            bot.sendMessage(msg.chat.id, '尝试删除消息 (ID ' + msg.message_id + ') 失败！可能是我没有删除消息的权限，或者消息已被删除。(20 秒后自毁)').then((cb) => delayDeleteMessage(cb, 20000));
+        }
     });
 }
+
+function delayDeleteMessage(msg, delay) {
+    setTimeout(() => {
+        try {
+            bot.deleteMessage(msg.chat.id, msg.message_id);
+        } catch (error) {
+            ;
+        }
+    }, delay);
+}
+
 // 判断一个用户是不是群组的管理员
 function isAdmin(searchResult) {
     if (searchResult.status == 'creator' || searchResult.status == 'administrator' || searchResult.user.username == 'GroupAnonymousBot')
@@ -119,13 +131,13 @@ bot.on('message', (msg) => {
                     if (chatsList[chatId] == undefined) chatsList[chatId] = {};
                 }
             }
-        // 机器人被踢出群组，清理配置文件
-        else if (msg.left_chat_member && msg.left_chat_member.username == config.bot) {
-            delete chatsList[chatId];
-            console.log('群组 ' + chatId + ' 已被移除。');
-            saveData();
-            return;
-        }
+        // // 机器人被踢出群组，清理配置文件
+        // else if (msg.left_chat_member && msg.left_chat_member.username == config.bot) {
+        //     delete chatsList[chatId];
+        //     console.log('群组 ' + chatId + ' 已被移除。');
+        //     saveData();
+        //     return;
+        // }
         // 调整群组的功能设置
         if (msg.text) {
             switch (msg.text) {
@@ -138,7 +150,8 @@ bot.on('message', (msg) => {
                             saveData();
                         }
                         else
-                            bot.sendMessage(chatId, '<a href="tg://user?id=' + fromId + '">您</a>不是群主或管理员。', { parse_mode: 'HTML' });
+                            bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' })
+                                .then((cb) => delayDeleteMessage(cb, 20000));
                         deleteMessage(msg, false);
                     });
                     break;
@@ -151,7 +164,8 @@ bot.on('message', (msg) => {
                             saveData();
                         }
                         else
-                            bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' });
+                            bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' })
+                                .then((cb) => delayDeleteMessage(cb, 20000));
                         deleteMessage(msg, false);
                     });
                     break;
@@ -167,7 +181,8 @@ bot.on('message', (msg) => {
                             });
                         }
                         else
-                            bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' });
+                            bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' })
+                                .then((cb) => delayDeleteMessage(cb, 20000));
                         deleteMessage(msg, false);
                     });
                     break;
@@ -183,7 +198,8 @@ bot.on('message', (msg) => {
                                 }
                             });
                         else
-                            bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' });
+                            bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' })
+                                .then((cb) => delayDeleteMessage(cb, 20000));
                     });
                     deleteMessage(msg, false);
                     break;
