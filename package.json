@@ -4,7 +4,7 @@
   "description": "A Telegram bot that can delete messages from users appearing as channels, also messages from anonymous admins and the linked channels.",
   "main": "bot.js",
   "dependencies": {
-    "@types/node-telegram-bot-api": "^0.53.2",
+    "@types/node-telegram-bot-api": "^0.53.5",
     "express": "^4.17.1",
     "node-telegram-bot-api": "^0.56.0"
   },
