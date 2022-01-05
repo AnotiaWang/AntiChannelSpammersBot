@@ -132,12 +132,12 @@ bot.on('message', (msg) => {
                 }
             }
         // // 机器人被踢出群组，清理配置文件
-        // else if (msg.left_chat_member && msg.left_chat_member.username == config.bot) {
-        //     delete chatsList[chatId];
-        //     console.log('群组 ' + chatId + ' 已被移除。');
-        //     saveData();
-        //     return;
-        // }
+        else if (msg.left_chat_member && msg.left_chat_member.username == config.bot) {
+            delete chatsList[chatId];
+            console.log('群组 ' + chatId + ' 已被移除。');
+            saveData();
+            return;
+        }
         // 调整群组的功能设置
         if (msg.text) {
             switch (msg.text) {
@@ -249,12 +249,18 @@ bot.on('message', (msg) => {
                                 }
                                 saveData();
                             }
-                            else
-                                bot.sendMessage(chatId, isPromote ? strings.x_already_in_whitelist : strings.x_not_in_whitelist);
-                        }).catch(() => { bot.sendMessage(chatId, strings.get_channel_error, { parse_mode: 'HTML' }); });
+                            else {
+                                bot.sendMessage(chatId, isPromote ? strings.x_already_in_whitelist : strings.x_not_in_whitelist)
+                                .then((cb) => delayDeleteMessage(cb, 20000));
+                            }
+                        }).catch(() => {
+                            bot.sendMessage(chatId, strings.get_channel_error, { parse_mode: 'HTML' })
+                                .then((cb) => delayDeleteMessage(cb, 20000));
+                        });
                     }
                     else
-                        bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' });
+                        bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' })
+                            .then((cb) => delayDeleteMessage(cb, 20000));
                     deleteMessage(msg, false);
                 });
             }
@@ -263,13 +269,13 @@ bot.on('message', (msg) => {
         if (msg.sender_chat) {
             if (chatsList[chatId].whitelist && chatsList[chatId].whitelist[msg.sender_chat.id.toString()])
                 return;
-            if (msg.from.username == 'Channel_Bot') { // 频道身份的消息，也可以用 sender_chat
+            if (msg.sender_chat.type == 'channel') { // 频道身份的消息，也可以用 sender_chat
                 if (msg.is_automatic_forward)  // 关联频道转过来的消息
                     chatsList[chatId].deleteChannelMessage ? deleteMessage(msg, true) : null;
                 else  // 频道马甲发送的消息
                     chatsList[chatId].delete ? deleteMessage(msg, true) : null;
             }
-            else if (msg.from.username && msg.from.username == 'GroupAnonymousBot')  // 匿名管理发送的消息
+            else if (msg.sender_chat.id == msg.chat.id)  // 匿名管理发送的消息
                 chatsList[chatId].deleteAnonymousMessage ? deleteMessage(msg, true) : null;
         }
     }
