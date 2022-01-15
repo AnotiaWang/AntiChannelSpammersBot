@@ -68,7 +68,7 @@ function generateKeyboard(chatId, isWhitelist) {
 function deleteMessage(msg, alertOnFailure) {
     bot.deleteMessage(msg.chat.id, msg.message_id).catch((err) => {
         if (alertOnFailure) {
-            bot.sendMessage(msg.chat.id, '尝试删除消息 (ID ' + msg.message_id + ') 失败！可能是我没有删除消息的权限，或者消息已被删除。(20 秒后自毁)').then((cb) => delayDeleteMessage(cb, 20000));
+            bot.sendMessage(msg.chat.id, '尝试删除消息 (ID ' + msg.message_id + ') 失败！可能是我没有删除消息的权限，或者消息已被删除。(15 秒后自毁)').then((cb) => delayDeleteMessage(cb, 15000));
         }
     });
 }
@@ -152,7 +152,7 @@ bot.on('message', (msg) => {
                 }
             });
         else if (msg.text == '/help')
-            bot.sendMessage(chatId, strings.help_group, { parse_mode: 'HTML', disable_web_page_preview: true });
+            bot.sendMessage(chatId, strings.help, { parse_mode: 'HTML', disable_web_page_preview: true });
         else
             bot.sendMessage(chatId, strings.group_only);
         return;
@@ -189,7 +189,7 @@ bot.on('message', (msg) => {
                         }
                         else
                             bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' })
-                                .then((cb) => delayDeleteMessage(cb, 20000));
+                                .then((cb) => delayDeleteMessage(cb, 5000));
                         deleteMessage(msg, false);
                     });
                     break;
@@ -203,7 +203,7 @@ bot.on('message', (msg) => {
                         }
                         else
                             bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' })
-                                .then((cb) => delayDeleteMessage(cb, 20000));
+                                .then((cb) => delayDeleteMessage(cb, 5000));
                         deleteMessage(msg, false);
                     });
                     break;
@@ -220,7 +220,7 @@ bot.on('message', (msg) => {
                         }
                         else
                             bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' })
-                                .then((cb) => delayDeleteMessage(cb, 20000));
+                                .then((cb) => delayDeleteMessage(cb, 5000));
                         deleteMessage(msg, false);
                     });
                     break;
@@ -228,7 +228,7 @@ bot.on('message', (msg) => {
                 case '/help@' + config.bot:
                     bot.getChatMember(chatId, fromId).then(function (result) {
                         if (isAdmin(result))
-                            bot.sendMessage(chatId, strings.help_group, {
+                            bot.sendMessage(chatId, strings.help, {
                                 parse_mode: 'HTML',
                                 disable_web_page_preview: true,
                                 reply_markup: {
@@ -237,7 +237,50 @@ bot.on('message', (msg) => {
                             });
                         else
                             bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' })
-                                .then((cb) => delayDeleteMessage(cb, 20000));
+                                .then((cb) => delayDeleteMessage(cb, 5000));
+                    });
+                    deleteMessage(msg, false);
+                    break;
+                case '/ban':
+                case '/ban@' + config.bot:
+                case '/unban':
+                case '/unban@' + config.bot:
+                    let isBan = msg.text.indexOf('/ban') == 0;
+                    bot.getChatMember(chatId, fromId).then(function (result) {
+                        if (isAdmin(result)) {
+                            if (msg.reply_to_message && msg.reply_to_message.sender_chat) {
+                                let oprChatId = msg.reply_to_message.sender_chat.id;
+                                if (isBan)
+                                    bot.banChatSenderChat(chatId, oprChatId)
+                                        .then((cb) => {
+                                            if (cb)
+                                                bot.sendMessage(chatId, strings.ban_sender_chat_success.replace('{id}', oprChatId), { parse_mode: 'HTML' });
+                                        })
+                                        .catch((err) => {
+                                            if (err.message.includes('not enough rights'))
+                                                bot.sendMessage(chatId, strings.permission_error)
+                                                    .then((cb) => delayDeleteMessage(cb, 15000));;
+                                        });
+                                else
+                                    bot.unbanChatSenderChat(chatId, oprChatId)
+                                        .then((cb) => {
+                                            if (cb)
+                                                bot.sendMessage(chatId, strings.unban_sender_chat_success.replace('{id}', oprChatId), { parse_mode: 'HTML' });
+                                        })
+                                        .catch((err) => {
+                                            if (err.message.includes('not enough rights'))
+                                                bot.sendMessage(chatId, strings.permission_error)
+                                                    .then((cb) => delayDeleteMessage(cb, 15000));;
+                                        });
+                            }
+                            else
+                                bot.sendMessage(chatId, strings.reply_to_query)
+                                    .then((cb) => delayDeleteMessage(cb, 15000));
+                        }
+                        else {
+                            bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' })
+                                .then((cb) => delayDeleteMessage(cb, 5000));
+                        }
                     });
                     deleteMessage(msg, false);
                     break;
@@ -289,16 +332,16 @@ bot.on('message', (msg) => {
                             }
                             else {
                                 bot.sendMessage(chatId, isPromote ? strings.x_already_in_whitelist : strings.x_not_in_whitelist)
-                                    .then((cb) => delayDeleteMessage(cb, 20000));
+                                    .then((cb) => delayDeleteMessage(cb, 15000));
                             }
                         }).catch(() => {
                             bot.sendMessage(chatId, strings.get_channel_error, { parse_mode: 'HTML' })
-                                .then((cb) => delayDeleteMessage(cb, 20000));
+                                .then((cb) => delayDeleteMessage(cb, 15000));
                         });
                     }
                     else
                         bot.sendMessage(chatId, strings.operator_not_admin.replace('{id}', fromId), { parse_mode: 'HTML' })
-                            .then((cb) => delayDeleteMessage(cb, 20000));
+                            .then((cb) => delayDeleteMessage(cb, 5000));
                     deleteMessage(msg, false);
                 });
             }

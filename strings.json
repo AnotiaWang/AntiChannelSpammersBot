@@ -7,13 +7,17 @@
     "del_channel_message_on": "已在本群启用自动删除频道马甲发送的消息。\n\n您需要将我设置为管理员，并分配删除消息的权限。您可以发送 /config 查看相关设置，发送 /help 查看功能帮助。",
     "del_channel_message_off": "已停止自动删除频道马甲发送的消息。其它设置项未变，您可以在 /config 设置中更改。",
     "operator_not_admin": "<a href=\"tg://user?id={id}\">您</a>不是群主或管理员。",
-    "help_group": "<b>使用帮助</b>\n\n<b> - /on | /off:</b> 启用 / 关闭自动删除\n\n<b> - /promote:</b> 回复一条来自频道马甲的信息，将其添加到白名单。也可以单独发送 <code>/promote [频道 UID/username]</code> 来添加。\n\n<b> - /demote:</b> 回复一条来自频道马甲的消息，将其移出白名单。也可以单独发送 <code>/demote [频道 UID/username]</code> 来移出。\n\n<b> - /config:</b> 显示此群组的设置：\n    - 开关 “删除频道马甲的消息”；\n    - 开关 “删除群管匿名发送的消息”；\n    - 开关 “删除来自关联频道的消息”；\n    - 查看和编辑白名单\n\n说明：频道 UID 形如 <code>-1234567890</code>，username 形如 <code>@xxxx</code>（适用于公开频道）\n\n本机器人基于 GPLv3 协议开源，源码发布于 <a href=\"https://github.com/AnotiaWang/AntiChannelSpammersBot\">GitHub</a>。",
+    "help": "<b>🤖 使用帮助</b>\n\n<b> - /on | /off:</b> 启用 / 关闭自动删除\n\n<b> - /ban | /unban</b>: 封禁/解封马甲。被封禁后，对方无法使用任何马甲在本群发言。您也可以在群组设置里解封频道。\n\n<b> - /promote | /demote:</b> 将频道加入/移出白名单。支持将频道 UID (<code>-10012345678</code>) / username (<code>@YuanShen</code>) 作为参数，也可以回复一条消息来操作。\n\n<b> - /config:</b> 显示此群组的设置：\n    - 开关 “删除频道马甲的消息”；\n    - 开关 “删除群管匿名发送的消息”；\n    - 开关 “删除来自关联频道的消息”；\n    - 查看和编辑白名单\n\n本机器人基于 GPLv3 协议开源，源码发布于 <a href=\"https://github.com/AnotiaWang/AntiChannelSpammersBot\">GitHub</a>。",
     "x_added_to_whitelist": "已将 \"{x}\" ({id}) 添加到白名单。",
     "x_removed_from_whitelist": "已将 \"{x}\" ({id}) 从白名单中移除。",
     "x_already_in_whitelist": "该频道已在白名单中。",
     "x_not_in_whitelist": "该频道不在白名单中。",
     "x_not_a_channel": "被回复的消息不是来自频道，无法添加或删除。",
     "get_channel_error": "查询失败：指定目标不是频道或不存在，请检查您的格式。请以频道 UID(如 <code>-123456789</code>) 或 username(@xxxx，对于公开频道) 作为命令参数。",
-    "whitelist_help": "<b>白名单</b>\n\n点击按钮取消对应频道的授权。\n\n加白名单频道支持以下方式，删除同理：\n  - 使用 <code>/promote</code> 回复一条来自频道马甲的消息；\n  - 发送 <code>/promote UID</code> (UID 形如 \"-xxxxxxxxx\")\n  - 发送 <code>/promote @username</code> (公开频道的用户名)",
-    "query_sender_not_admin": "您不是群主或管理员，再点我要摇人啦！\n\nPS：如果没有管理权限，我无法获取群内成员权限组。"
+    "whitelist_help": "<b>📃 白名单</b>\n\n点击按钮取消对应频道的授权。",
+    "query_sender_not_admin": "您不是群主或管理员，再点我要摇人啦！\n\nPS：如果没有管理权限，我无法获取群内成员权限组。",
+    "reply_to_query": "请回复一条来自频道马甲的消息。",
+    "ban_sender_chat_success": "已封禁频道 <code>{id}</code>，其所有者将无法在本群使用任何频道马甲。",
+    "unban_sender_chat_success": "已解封频道 <code>{id}</code>。",
+    "permission_error": "操作失败，请给予我封禁成员的权限。"
 }
