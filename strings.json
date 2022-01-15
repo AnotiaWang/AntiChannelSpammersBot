@@ -1,5 +1,5 @@
 {
-    "stats": "被拉入的群组：{g} 个\n启用功能的群组：{e} 个",
+    "stats": "🎉 统计信息\n加入的群组：{g} 个\n成员数：{u1} 人\n启用的群组：{e} 个\n成员数：{u2} 人",
     "welcome_private": "<b>欢迎使用 🎉</b>\n\n本机器人的功能仅适用于群组，请将我添加至群组。\n\n源代码：<a href=\"https://github.com/AnotiaWang/AntiChannelSpammersBot\">GitHub</a>",
     "welcome_group": "欢迎使用！您可以发送 /on 或 /off 一键开启和关闭服务，或者发送 /config 进行详细的设置。用法详见 /help。",
     "add_to_group": "点此将我添加到群组",
@@ -15,5 +15,5 @@
     "x_not_a_channel": "被回复的消息不是来自频道，无法添加或删除。",
     "get_channel_error": "查询失败：指定目标不是频道或不存在，请检查您的格式。请以频道 UID(如 <code>-123456789</code>) 或 username(@xxxx，对于公开频道) 作为命令参数。",
     "whitelist_help": "<b>白名单</b>\n\n点击按钮取消对应频道的授权。\n\n加白名单频道支持以下方式，删除同理：\n  - 使用 <code>/promote</code> 回复一条来自频道马甲的消息；\n  - 发送 <code>/promote UID</code> (UID 形如 \"-xxxxxxxxx\")\n  - 发送 <code>/promote @username</code> (公开频道的用户名)",
-    "query_sender_not_admin": "您不是群主或管理员，再点我要摇人啦！"
+    "query_sender_not_admin": "您不是群主或管理员，再点我要摇人啦！\n\nPS：如果没有管理权限，我无法获取群内成员权限组。"
 }

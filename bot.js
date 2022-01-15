@@ -17,7 +17,7 @@ if (config.webhookUrl) {
         res.send({
             "schemaVersion": 1,
             "label": "使用中群组",
-            "message": Object.keys(chatsList).length.toString() + ' 个',
+            "message": getActiveGroupsCount().toString() + ' 个',
             "color": "#26A5E4",
             "namedLogo": "Telegram",
             "style": "flat"
@@ -66,20 +66,48 @@ function generateKeyboard(chatId, isWhitelist) {
 }
 
 function deleteMessage(msg, alertOnFailure) {
-    bot.deleteMessage(msg.chat.id, msg.message_id).catch(() => {
+    bot.deleteMessage(msg.chat.id, msg.message_id).catch((err) => {
         if (alertOnFailure) {
             bot.sendMessage(msg.chat.id, '尝试删除消息 (ID ' + msg.message_id + ') 失败！可能是我没有删除消息的权限，或者消息已被删除。(20 秒后自毁)').then((cb) => delayDeleteMessage(cb, 20000));
         }
     });
 }
 
+async function getChatMembersCount(editMsgId) {
+    let activeCount = 0, totalCount = 0, i = 0;
+    let interval = setInterval(() => {
+        bot.editMessageText('统计中 ' + (i / Object.keys(chatsList).length * 100).toFixed(2) + '% ...', {
+            chat_id: config.admin,
+            message_id: editMsgId
+        }).catch(() => { });
+    }, 3000);
+    let chatIds = Object.keys(chatsList);
+    while (chatIds.length > 0) {
+        let chat = chatIds.shift();
+        try {
+            let cb = await bot.getChatMemberCount(chat);
+            i++;
+            totalCount += cb;
+            if (chatsList[chat].delete)
+                activeCount += cb;
+        }
+        catch (err) {
+            if (err.message.includes('kicked') || err.message.includes('not found') || err.message.includes('upgraded')) {
+                console.log('删除 ' + chat);
+                delete chatsList[chat];
+                saveData();
+            }
+            else if (err.message.includes('429 Too Many Requests'))
+                chatIds.push(chat);
+        }
+    }
+    clearInterval(interval);
+    return [totalCount, activeCount];
+}
+
 function delayDeleteMessage(msg, delay) {
     setTimeout(() => {
-        try {
-            bot.deleteMessage(msg.chat.id, msg.message_id);
-        } catch (error) {
-            ;
-        }
+        bot.deleteMessage(msg.chat.id, msg.message_id).catch((err) => { });
     }, delay);
 }
 
@@ -88,6 +116,13 @@ function isAdmin(searchResult) {
     if (searchResult.status == 'creator' || searchResult.status == 'administrator' || searchResult.user.username == 'GroupAnonymousBot')
         return true;
     else return false;
+}
+
+function getActiveGroupsCount() {
+    let count = 0;
+    for (let key in chatsList)
+        if (chatsList[key].delete) count++;
+    return count;
 }
 
 function saveData() { fs.writeFileSync('chatsList.json', JSON.stringify(chatsList)); }
@@ -99,10 +134,12 @@ bot.on('message', (msg) => {
     if (msg.chat.type == 'private') {
         if (fromId == config.admin) {
             if (msg.text == '/stats') {
-                let count = 0;
-                for (let key in chatsList)
-                    if (chatsList[key].delete) count++;
-                bot.sendMessage(chatId, strings.stats.replace('{g}', Object.keys(chatsList).length).replace('{e}', count));
+                bot.sendMessage(config.admin, '统计中...').then((cb) => {
+                    let editMsgId = cb.message_id;
+                    getChatMembersCount(cb.message_id).then((userCount) => {
+                        bot.editMessageText(strings.stats.replace('{g}', Object.keys(chatsList).length).replace('{e}', getActiveGroupsCount()).replace('{u1}', userCount[0]).replace('{u2}', userCount[1]), { chat_id: config.admin, message_id: editMsgId });
+                    });
+                });
                 return;
             }
         }
@@ -128,7 +165,8 @@ bot.on('message', (msg) => {
             for (let x in msg.new_chat_members) {
                 if (msg.new_chat_members[x].username == config.bot) {
                     bot.sendMessage(chatId, strings.welcome_group);
-                    if (chatsList[chatId] == undefined) chatsList[chatId] = {};
+                    if (!chatsList[chatId])
+                        chatsList[chatId] = {};
                 }
             }
         // // 机器人被踢出群组，清理配置文件
@@ -251,7 +289,7 @@ bot.on('message', (msg) => {
                             }
                             else {
                                 bot.sendMessage(chatId, isPromote ? strings.x_already_in_whitelist : strings.x_not_in_whitelist)
-                                .then((cb) => delayDeleteMessage(cb, 20000));
+                                    .then((cb) => delayDeleteMessage(cb, 20000));
                             }
                         }).catch(() => {
                             bot.sendMessage(chatId, strings.get_channel_error, { parse_mode: 'HTML' })
