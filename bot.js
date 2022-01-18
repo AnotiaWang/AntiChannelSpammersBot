@@ -35,6 +35,7 @@ else bot.startPolling();
  * @property {boolean} deleteAnonymousMessage 是否删除匿名发送的消息
  * @property {boolean} deleteChannelMessage 是否删除来自关联频道的消息
  * @property {object} whitelist 白名单
+ * @property {boolean} unpinChannelMessage 自动解除频道消息在群组的置顶
  */
 var chatsList = fs.existsSync('chatsList.json') ? JSON.parse(fs.readFileSync('chatsList.json')) : {};
 
@@ -59,6 +60,7 @@ function generateKeyboard(chatId, isWhitelist) {
         keyboard.push([{ text: '删除频道马甲消息：' + (chatsList[chatId].delete ? '✅' : '❌'), callback_data: 'switch' }]);
         keyboard.push([{ text: '删除匿名管理消息：' + (chatsList[chatId].deleteAnonymousMessage ? '✅' : '❌'), callback_data: 'deleteAnonymousMessage' }]);
         keyboard.push([{ text: '删除来自关联频道的消息：' + (chatsList[chatId].deleteChannelMessage ? '✅' : '❌'), callback_data: 'deleteChannelMessage' }]);
+        keyboard.push([{ text: '解除频道消息在群内置顶：' + (chatsList[chatId].unpinChannelMessage ? '✅' : '❌'), callback_data: 'unpinChannelMessage' }])
         keyboard.push([{ text: '频道白名单', callback_data: 'whitelist' }]);
         keyboard.push([{ text: '删除此消息', callback_data: 'deleteMsg' }]);
     }
@@ -179,6 +181,10 @@ bot.on('message', (msg) => {
         // 调整群组的功能设置
         if (msg.text) {
             switch (msg.text) {
+                case '/start':
+                case '/start@' + config.bot:
+                    bot.sendMessage(chatId, strings.welcome_group);
+                    break;
                 case '/on': // 开启功能
                 case '/on@' + config.bot:
                     bot.getChatMember(chatId, fromId).then(function (result) {
@@ -258,7 +264,7 @@ bot.on('message', (msg) => {
                                         })
                                         .catch((err) => {
                                             if (err.message.includes('not enough rights'))
-                                                bot.sendMessage(chatId, strings.permission_error)
+                                                bot.sendMessage(chatId, strings.permission_error.replace(/{x}/g, '封禁频道'))
                                                     .then((cb) => delayDeleteMessage(cb, 15000));;
                                         });
                                 else
@@ -269,7 +275,7 @@ bot.on('message', (msg) => {
                                         })
                                         .catch((err) => {
                                             if (err.message.includes('not enough rights'))
-                                                bot.sendMessage(chatId, strings.permission_error)
+                                                bot.sendMessage(chatId, strings.permission_error.replace(/{x}/g, '解封频道'))
                                                     .then((cb) => delayDeleteMessage(cb, 15000));;
                                         });
                             }
@@ -352,7 +358,13 @@ bot.on('message', (msg) => {
                 return;
             if (msg.sender_chat.type == 'channel') { // 频道身份的消息，也可以用 sender_chat
                 if (msg.is_automatic_forward)  // 关联频道转过来的消息
-                    chatsList[chatId].deleteChannelMessage ? deleteMessage(msg, true) : null;
+                {
+                    if (chatsList[chatId].deleteChannelMessage)
+                        deleteMessage(msg, true);
+                    else if (chatsList[chatId].unpinChannelMessage)
+                        bot.unpinChatMessage(chatId, { message_id: msg.message_id })
+                            .catch((err) => bot.sendMessage(chatId, strings.permission_error.replace(/{x}/g, '解除置顶消息') + '另请确保没有功能相同的 bot 在群内。'));
+                }
                 else  // 频道马甲发送的消息
                     chatsList[chatId].delete ? deleteMessage(msg, true) : null;
             }
@@ -373,15 +385,26 @@ bot.on('callback_query', (query) => {
             switch (query.data) {
                 case 'switch':
                     chatsList[chatId].delete = !chatsList[chatId].delete;
-                    bot.answerCallbackQuery(query.id, { text: '已' + (chatsList[chatId].delete ? '启用' : '停用') + '自动删除频道马甲消息。' });
+                    bot.answerCallbackQuery(query.id, { text: '设置成功' });
                     break;
                 case 'deleteAnonymousMessage':
                     chatsList[chatId].deleteAnonymousMessage = !chatsList[chatId].deleteAnonymousMessage;
-                    bot.answerCallbackQuery(query.id, { text: '已' + (chatsList[chatId].deleteAnonymousMessage ? '启用' : '停用') + '自动删除匿名群管的消息。' });
+                    bot.answerCallbackQuery(query.id, { text: '设置成功' });
                     break;
                 case 'deleteChannelMessage':
                     chatsList[chatId].deleteChannelMessage = !chatsList[chatId].deleteChannelMessage;
-                    bot.answerCallbackQuery(query.id, { text: '已' + (chatsList[chatId].deleteChannelMessage ? '启用' : '停用') + '自动删除来自关联频道的消息。' });
+                    if (chatsList[chatId].unpinChannelMessage === chatsList[chatId].deleteChannelMessage === true)
+                        delete chatsList[chatId].unpinChannelMessage;
+                    bot.answerCallbackQuery(query.id, { text: '设置成功' });
+                    break;
+                case 'unpinChannelMessage':
+                    chatsList[chatId].unpinChannelMessage = !chatsList[chatId].unpinChannelMessage;
+                    if (chatsList[chatId].unpinChannelMessage === chatsList[chatId].deleteChannelMessage === true)
+                        delete chatsList[chatId].deleteChannelMessage;
+                    if (chatsList[chatId].unpinChannelMessage)
+                        bot.answerCallbackQuery(query.id, { text: '设置成功。您需要授予我置顶消息的权限。', show_alert: true });
+                    else
+                        bot.answerCallbackQuery(query.id, { text: '设置成功' });
                     break;
                 case 'deleteMsg':
                     bot.deleteMessage(chatId, query.message.message_id);
