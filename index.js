@@ -29,3 +29,4 @@ bot.catch((err) =>
 const botInfo = await bot.telegram.getMe();
 export const botName = botInfo.username;
 await bot.launch();
+log(`${botName} 启动完成`);

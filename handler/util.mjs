@@ -64,14 +64,14 @@ export function generateKeyboard(chatId, isWhitelist) {
 export function getActiveGroupsCount() {
     let count = 0;
     for (let key in chatsList)
-        if (chatsList[key].delete) count++;
+        if (chatsList[key].del) count++;
     return count;
 }
 
 export async function getChatMembersCount(editMsg) {
     let activeCount = 0, totalCount = 0, i = 0;
     let interval = setInterval(() => {
-        bot.telegram.editMessageText(editMsg.chat.id, editMsg.message, undefined, '统计中 ' + (i / Object.keys(chatsList).length * 100).toFixed(2) + '% ...').catch(() => {
+        bot.telegram.editMessageText(editMsg.chat.id, editMsg.message_id, undefined, '统计中 ' + (i / Object.keys(chatsList).length * 100).toFixed(2) + '% ...').catch(() => {
         });
     }, 3000);
     let chatIds = Object.keys(chatsList);

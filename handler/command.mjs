@@ -134,8 +134,8 @@ class OwnerCommands {
             undefined,
             strings.stats
                 .replace('{g}', Object.keys(chatsList).length.toString())
-                .replace('{e}', getActiveGroupsCount().toString())
-                .replace('{u1}', result[0].toString())
+                .replace('{u1}', getActiveGroupsCount().toString())
+                .replace('{g}', result[0].toString())
                 .replace('{u2}', result[1].toString())
         );
         log(`Analytics: 统计完成`);
