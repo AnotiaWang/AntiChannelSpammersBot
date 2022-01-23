@@ -28,17 +28,16 @@
 
 	- `admin` : 你的 UID (Unique Identifier，可使用第三方客户端或 @GetIDsBot 获取)，如果不需要统计功能，可以不配置
 
-   - `bot` : 机器人的 username，不含 @ ，如 `AntiChannelSpammersBot`
-
 	- `webhookUrl` : WebHook 地址。填写完整 URL，**行尾须包含 `/`**（ 如 `https://bot.blabla.com:443/` ）。如不使用则留空。
+
+   - `webhookPort`: Webhook 监听的端口，如不使用则留空
 
    > 如使用 WebHook ，支持生成[统计 badge](https://shields.io)，默认的数据接口在 `[域名]/stats` ，样式见代码。图片地址使用 `https://shields.io/endpoint?url=[域名]/stats` 即可。
 
 3. 运行：
 
    ```bash
-   npm install
-   node bot.js
+   npm install && npm start
    ```
 
 ## Demo: [@AntiChannelSpammersBot](https://t.me/AntiChannelSpammersBot)
