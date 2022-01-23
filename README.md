@@ -3,7 +3,8 @@
 <p align="center">清理群内成员使用频道马甲发送的消息。</p>
 
 <div align="center"> 
-<img src="https://shields.io/endpoint?url=https://acsbot.anotia.top/stats/"> <img src="https://img.shields.io/github/stars/AnotiaWang/AntiChannelSpammersBot?color=%2326A5E4&logo=GitHub">
+<!-- <img src="https://shields.io/endpoint?url=https://acsbot.anotia.top/stats/"> -->
+ <img src="https://img.shields.io/github/stars/AnotiaWang/AntiChannelSpammersBot?color=%2326A5E4&logo=GitHub">
 </div>
 
 ## 特性
@@ -22,7 +23,9 @@
 
 1. Clone 本仓库
 
-2. 配置变量 (`config.json`) ：
+2. 复制 `.env.example` 并重命名为 `.env`
+
+2. 编辑 `.env`：
 
 	- `token` : 从 BotFather 拿到的 token
 
