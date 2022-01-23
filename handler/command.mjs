@@ -7,7 +7,7 @@ import {admin, bot} from "../index.js";
 export async function handleCommand(ctx) {
     let text = ctx.message.text || ctx.message.caption;
     let [command] = text.split(' ');
-    command = command.slice(1);
+    command = command.split('@')[0].slice(1);
     if (GroupCommands.hasOwnProperty(command) && isGroup(ctx)) {
         if (await isAdmin(ctx)) {
             GroupCommands[command](ctx);

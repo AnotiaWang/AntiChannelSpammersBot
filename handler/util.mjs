@@ -102,7 +102,7 @@ export function saveData() {
 
 export function loadBotData() {
     try {
-        chatsList = JSON.parse(readFileSync('data/chatsList.json', 'utf-8'));
+        Object.assign(chatsList, JSON.parse(readFileSync('data/chatsList.json', 'utf-8')));
         log('加载数据成功');
     } catch (err) {
         log(`未发现数据或恢复失败，已重新创建数据，报错信息：${err.message}`);

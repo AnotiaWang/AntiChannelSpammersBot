@@ -1,12 +1,29 @@
-import {isCommand, isGroup, log, checkChatData, handleCommand} from "./index.mjs";
+import {isCommand, isGroup, log, checkChatData, handleCommand, saveData} from "./index.mjs";
 import {chatsList, strings} from "../src/index.mjs";
-import {bot} from "../index.js";
+import {bot, botName} from "../index.js";
 
 export async function handleMessage(ctx) {
     let chatId = ctx.message.chat.id;
     let text = ctx.message.text || ctx.message.caption;
-    if (isGroup(ctx))
+    if (isGroup(ctx)) {
         checkChatData(chatId);
+        let msg = ctx.message;
+        if (msg.new_chat_members)
+            for (let x in msg.new_chat_members) {
+                if (msg.new_chat_members[x].username === botName) {
+                    if (!chatsList[chatId])
+                        chatsList[chatId] = {};
+                    log(`Chat ${chatId}: 被加入群组`);
+                    await ctx.replyWithHTML(strings.welcome_group).catch(e => log(`Chat ${chatId}: 发送欢迎消息失败：${e.message}`));
+                }
+            }
+        // // 机器人被踢出群组，清理配置文件
+        else if (msg.left_chat_member && msg.left_chat_member.username === botName) {
+            delete chatsList[chatId];
+            log(`Chat ${chatId}: 已被移除。`);
+            return;
+        }
+    }
     if (text && isCommand(text))
         await handleCommand(ctx);
     else

@@ -1,5 +1,5 @@
 import {strings, chatsList} from '../src/index.mjs';
-import {checkChatData, generateKeyboard, isAdmin, log} from "./index.mjs";
+import {checkChatData, generateKeyboard, isAdmin, log, saveData} from "./index.mjs";
 
 export async function handleCallbackQuery(ctx) {
     let query = ctx.callbackQuery;
@@ -59,19 +59,10 @@ export async function handleCallbackQuery(ctx) {
             log(`Chat ${chatId}: 白名单中的频道 ${demoteChatId} 被移除`);
             isWhitelist = true;
         }
-        // saveData();
         ctx.editMessageText(text, {
             parse_mode: 'HTML',
             reply_markup: {inline_keyboard: generateKeyboard(chatId, isWhitelist)}
         }).catch((err) => log(`Chat ${chatId}: 编辑设置消息 (ID ${query.message.message_id}) 失败: ${err.message}`));
+        saveData();
     }
 }
-
-// function answerCallbackQuery (ctx, showAlert = false) {
-//     ctx.answerCbQuery([text: ])
-//     ctx.telegram.answerCallbackQuery({
-//         callback_query_id: ctx.update.callback_query.id,
-//         text: strings.settings_saved,
-//         show_alert: showAlert
-//     });
-// }
