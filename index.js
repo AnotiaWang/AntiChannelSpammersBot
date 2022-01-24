@@ -1,20 +1,22 @@
 import {Telegraf} from "telegraf";
 import 'dotenv/config';
 // import HttpsProxyAgent from 'https-proxy-agent'; // 如果需代理，导入此包
-import {GeneralCommands, handleMessage, handleCallbackQuery, log, loadBotData} from './handler/index.mjs';
+import {
+    GeneralCommands,
+    handleMessage,
+    handleCallbackQuery,
+    log,
+    loadBotData,
+    initWebhook
+} from './handler/index.mjs';
 
 export const {token, admin, webhookUrl, webhookPort} = process.env;
 export const bot = new Telegraf(token);
 
+
+log('开始启动...');
 if (webhookUrl) {
-    bot.telegram.setWebhook(webhookUrl)
-        .then(() => {
-            log('Webhook 设置成功');
-        })
-        .catch(err => {
-            log('Webhook 设置失败', err);
-        });
-    bot.startWebhook(webhookUrl, null, webhookPort);
+    await initWebhook();
 } else {
     log('没有设置 Webhook，开始轮询');
 }

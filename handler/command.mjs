@@ -1,8 +1,6 @@
-import {isAdmin, isGroup, log, deleteMessage} from "./index.mjs";
+import {isAdmin, isGroup, log, deleteMessage, generateKeyboard, getActiveGroupsCount, getChatMembersCount, isPrivate, saveData, getQueryChatId} from "./index.mjs";
 import {chatsList, strings} from '../src/index.mjs';
-import {generateKeyboard, getActiveGroupsCount, getChatMembersCount, isPrivate, saveData} from "./util.mjs";
-import {getQueryChatId} from "./message.mjs";
-import {admin, bot} from "../index.js";
+import {admin} from "../index.js";
 
 export async function handleCommand(ctx) {
     let text = ctx.message.text || ctx.message.caption;
@@ -99,7 +97,7 @@ class GroupCommands {
             reply_markup: {
                 inline_keyboard: generateKeyboard(ctx.message.chat.id)
             }
-        }).catch((err) => null);
+        }).catch(() => null);
     }
 }
 
@@ -134,8 +132,8 @@ class OwnerCommands {
             undefined,
             strings.stats
                 .replace('{g}', Object.keys(chatsList).length.toString())
-                .replace('{u1}', getActiveGroupsCount().toString())
-                .replace('{g}', result[0].toString())
+                .replace('{u1}', result[0].toString())
+                .replace('{e}', getActiveGroupsCount().toString())
                 .replace('{u2}', result[1].toString())
         );
         log(`Analytics: 统计完成`);

@@ -1,9 +1,49 @@
 import {chatsList, template} from "../src/index.mjs";
 import {bot, webhookPort, webhookUrl} from "../index.js";
-import {readFileSync, writeFileSync} from "fs";
+import {readFileSync, writeFileSync, existsSync, mkdirSync} from "fs";
+import {createServer} from "http";
+
+export async function initWebhook () {
+    const webhookPath = new URL(webhookUrl).pathname;
+    await bot.telegram.setWebhook(webhookUrl)
+        .then(() => {
+            log('Webhook 设置成功');
+        })
+        .catch(err => {
+            log('Webhook 设置失败: ', err.message);
+        });
+    createServer((req, res) => {
+        if (req.url === '/stats') {
+            res.writeHead(200, {'Content-Type': 'text/html, charset=utf-8'});
+            res.write(JSON.stringify({
+                "schemaVersion": 1,
+                "label": "使用中群组",
+                "message": getActiveGroupsCount().toString() + ' 个',
+                "color": "#26A5E4",
+                "namedLogo": "Telegram",
+                "style": "flat"
+            }));
+            res.end();
+        }
+        else if (req.url === webhookPath) {
+            bot.handleUpdate(req.body, res)
+                .catch(err => {
+                    log('Update 处理失败: ', err.message);
+                });
+        } else {
+            res.statusCode = 404;
+            res.end('Not found');
+        }
+    }).listen(webhookPort);
+}
 
 export function log(text, ...args) {
-    console.log(new Date().toLocaleString('zh-CN') + ': ' + text, ...args);
+    let time = new Date().toLocaleString('zh-CN', {hour12: false});
+    console.log(time + ': ' + text, ...args);
+    if(!existsSync('./log')) {
+        mkdirSync('./log');
+    }
+    writeFileSync('./log/log.txt', time + ': ' + text + '\n', {flag: 'a'});
 }
 
 export async function isAdmin(ctx) {
@@ -81,14 +121,17 @@ export async function getChatMembersCount(editMsg) {
             let cb = await bot.telegram.getChatMembersCount(chat);
             i++;
             totalCount += cb;
-            if (chatsList[chat].delete)
+            if (chatsList[chat].del)
                 activeCount += cb;
         } catch (err) {
-            if (err.message.includes('kicked') || err.message.includes('not found') || err.message.includes('upgraded')) {
+            if (err.message.includes('kicked') ||
+                err.message.includes('not found') ||
+                err.message.includes('upgraded') ||
+                err.message.includes('deleted')) {
                 log(`Analytics: ${chat} 状态异常，已清除其配置数据`);
                 delete chatsList[chat];
                 saveData();
-            } else if (err.message.includes('429 Too Many Requests'))
+            } else if (err.message.includes('Too Many Requests'))
                 chatIds.push(chat);
         }
     }
