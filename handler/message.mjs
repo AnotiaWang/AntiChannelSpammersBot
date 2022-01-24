@@ -1,4 +1,4 @@
-import {isCommand, isGroup, log, checkChatData, handleCommand, saveData} from "./index.mjs";
+import {isCommand, isGroup, log, checkChatData, handleCommand} from "./index.mjs";
 import {chatsList, strings} from "../src/index.mjs";
 import {bot, botName} from "../index.js";
 
@@ -53,7 +53,7 @@ async function judge(ctx) {
             } else if (chatsList[chatId].del && !chatsList[chatId].whitelist[senderChat.id]) {
                 await deleteMessage(msg, false);
             }
-        } else if ((chatType === 'group' || chatType === 'supergroup') && chatsList[chatId].delAnonMsg)
+        } else if ((senderChat.type === 'group' || senderChat.type === 'supergroup') && chatsList[chatId].delAnonMsg)
             await deleteMessage(msg, true);
     }
 }
@@ -79,11 +79,11 @@ export async function deleteMessage(msg, alertOnFailure, delay) {
 }
 
 export async function getQueryChatId(ctx) {
-    let msg = ctx.message, chatId = msg.chat.id;
-    let queryChatId = null, targetChatId = null, cb;
+    let msg = ctx.message;
+    let queryChatId = null, cb;
 
     if (msg.reply_to_message) {
-        if (!msg.reply_to_message.sender_chat || msg.reply_to_message.sender_chat.type !== 'channel') {
+        if (!(msg.reply_to_message.sender_chat && msg.reply_to_message.sender_chat.type === 'channel')) {
             cb = await ctx.reply(strings.x_not_a_channel);
             await deleteMessage(cb, false, 15000);
             return null;
@@ -99,7 +99,12 @@ export async function getQueryChatId(ctx) {
     }
     try {
         let result = await ctx.telegram.getChat(queryChatId);
-        return [result.id.toString(), result.title];
+        if (result.type === 'channel')
+            return [result.id.toString(), result.title];
+        else {
+            ctx.reply(strings.x_not_a_channel);
+            return null;
+        }
     } catch (e) {
         cb = await ctx.reply(strings.get_channel_error.replace('{code}', e.message));
         await deleteMessage(cb, false, 15000);

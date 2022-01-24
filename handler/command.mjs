@@ -139,8 +139,9 @@ class OwnerCommands {
         log(`Analytics: 统计完成`);
     }
 
-    static save() {
+    static save(ctx) {
         saveData();
+        ctx.reply(strings.save_success);
         log(`Data: 已备份数据`);
     }
 
