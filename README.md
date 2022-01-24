@@ -3,8 +3,8 @@
 <p align="center">清理群内成员使用频道马甲发送的消息。</p>
 
 <div align="center"> 
-<!-- <img src="https://shields.io/endpoint?url=https://acsbot.anotia.top/stats/"> -->
- <img src="https://img.shields.io/github/stars/AnotiaWang/AntiChannelSpammersBot?color=%2326A5E4&logo=GitHub">
+<img src="https://shields.io/endpoint?url=https://acsbot.anotia.top/stats" alt="统计信息">
+ <img src="https://img.shields.io/github/stars/AnotiaWang/AntiChannelSpammersBot?color=%2326A5E4&logo=GitHub" alt="仓库收藏数">
 </div>
 
 ## 特性
@@ -31,9 +31,9 @@
 
 	- `admin` : 你的 UID (Unique Identifier，可使用第三方客户端或 @GetIDsBot 获取)，如果不需要统计功能，可以不配置
 
-	- `webhookUrl` : WebHook 地址。填写完整 URL，**行尾须包含 `/`**（ 如 `https://bot.blabla.com:443/` ）。如不使用则留空。
+	- `webhookUrl` : WebHook 地址。填写完整 URL，**行尾须包含 `/`**（ 如 `https://bot.blabla.com:443/bot` ）。如不使用则留空。
 
-   - `webhookPort`: Webhook 监听的端口，如不使用则留空
+    - `webhookPort`: HTTP 服务器监听的端口，如不使用则留空
 
    > 如使用 WebHook ，支持生成[统计 badge](https://shields.io)，默认的数据接口在 `[域名]/stats` ，样式见代码。图片地址使用 `https://shields.io/endpoint?url=[域名]/stats` 即可。
 
