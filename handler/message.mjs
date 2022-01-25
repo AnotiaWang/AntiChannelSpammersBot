@@ -32,7 +32,7 @@ export async function handleMessage(ctx) {
 
 async function judge(ctx) {
     let msg = ctx.message;
-    let chatId = msg.chat.id, chatType = msg.chat.type;
+    let chatId = msg.chat.id.toString(), chatType = msg.chat.type;
 
     if (chatType === 'private')
         return ctx.reply(strings.group_only);

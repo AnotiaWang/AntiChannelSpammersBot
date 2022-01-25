@@ -65,6 +65,12 @@ export function isPrivate(ctx) {
 export function checkChatData(chatId) {
     if (!chatsList[chatId])
         Object.assign(chatsList, {[chatId]: template});
+    else {
+        for (let a in template) {
+            if (!chatsList[chatId][a])
+                Object.assign(chatsList[chatId], {[a]: template[a]});
+        }
+    }
 }
 
 export function isCommand(text) {

@@ -1,4 +1,4 @@
-import {isAdmin, isGroup, log, deleteMessage, generateKeyboard, getActiveGroupsCount, getChatMembersCount, isPrivate, saveData, getQueryChatId} from "./index.mjs";
+import {isAdmin, isGroup, log, deleteMessage, generateKeyboard, getActiveGroupsCount, getChatMembersCount, isPrivate, saveData, getQueryChatId, checkChatData} from "./index.mjs";
 import {chatsList, strings} from '../src/index.mjs';
 import {admin} from "../index.js";
 
@@ -7,6 +7,7 @@ export async function handleCommand(ctx) {
     let [command] = text.split(' ');
     command = command.split('@')[0].slice(1);
     if (GroupCommands.hasOwnProperty(command) && isGroup(ctx)) {
+        checkChatData(ctx.message.chat.id);
         if (await isAdmin(ctx)) {
             GroupCommands[command](ctx);
         } else {
@@ -107,6 +108,7 @@ export class GeneralCommands {
             await ctx.replyWithHTML(strings.welcome_private, {disable_web_page_preview: true});
         else if (isGroup(ctx))
             await ctx.replyWithHTML(strings.welcome_group, {disable_web_page_preview: true});
+        await deleteMessage(ctx.message, false);
     }
 
     static async help(ctx) {
@@ -119,6 +121,7 @@ export class GeneralCommands {
                     inline_keyboard: [[{text: strings.button_deleteMsg, callback_data: 'deleteMsg'}]]
                 }
             });
+        await deleteMessage(ctx.message, false);
     }
 }
 
