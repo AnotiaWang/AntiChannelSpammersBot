@@ -3,7 +3,7 @@ import {bot, webhookPort, webhookUrl} from "../index.js";
 import {readFileSync, writeFileSync, existsSync, mkdirSync} from "fs";
 import {createServer} from "http";
 
-export async function initWebhook () {
+export async function initWebhook() {
     const webhookPath = new URL(webhookUrl).pathname;
     await bot.telegram.setWebhook(webhookUrl)
         .then(() => {
@@ -24,8 +24,7 @@ export async function initWebhook () {
                 "style": "flat"
             }));
             res.end();
-        }
-        else if (req.url === webhookPath) {
+        } else if (req.url === webhookPath) {
             bot.handleUpdate(req.body, res)
                 .catch(err => {
                     log('Update 处理失败: ', err.message);
@@ -40,7 +39,7 @@ export async function initWebhook () {
 export function log(text, ...args) {
     let time = new Date().toLocaleString('zh-CN', {hour12: false});
     console.log(time + ': ' + text, ...args);
-    if(!existsSync('./log')) {
+    if (!existsSync('./log')) {
         mkdirSync('./log');
     }
     writeFileSync('./log/log.txt', time + ': ' + text + '\n', {flag: 'a'});
@@ -146,12 +145,14 @@ export async function getChatMembersCount(editMsg) {
 }
 
 export function saveData() {
-    writeFileSync('data/chatsList.json', JSON.stringify(chatsList));
+    if (!existsSync('./data'))
+        mkdirSync('./data');
+    writeFileSync('./data/chatsList.json', JSON.stringify(chatsList));
 }
 
 export function loadBotData() {
     try {
-        Object.assign(chatsList, JSON.parse(readFileSync('data/chatsList.json', 'utf-8')));
+        Object.assign(chatsList, JSON.parse(readFileSync('./data/chatsList.json', 'utf-8')));
         log('加载数据成功');
     } catch (err) {
         log(`未发现数据或恢复失败，已重新创建数据，报错信息：${err.message}`);

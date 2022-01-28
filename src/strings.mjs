@@ -13,7 +13,7 @@ export const strings = {
     "x_removed_from_whitelist": "已将 \"{x}\" ({id}) 从白名单中移除。",
     "x_already_in_whitelist": "该频道已在白名单中。",
     "x_not_in_whitelist": "该频道不在白名单中。",
-    "x_not_a_channel": "目标不是频道，无法添加或删除。",
+    "x_not_a_channel": "目标不是频道，无法操作。",
     "get_channel_error": "查询失败：指定目标不是频道或不存在，请检查您的格式。请以频道 UID(如 <code>-123456789</code>) 或 username(@xxxx，对于公开频道) 作为命令参数。\n{code}",
     "command_usage_error": "请回复一条消息，或者使用 <code>[频道 UID/username]</code> 作为命令参数。",
     "whitelist_help": "<b>📃 白名单</b>\n\n点击按钮取消对应频道的授权。",
