@@ -1,6 +1,6 @@
-import {isCommand, isGroup, log, checkChatData, handleCommand} from "./index.mjs";
-import {chatsList, strings} from "../src/index.mjs";
-import {bot, botName} from "../index.js";
+import { isCommand, isGroup, log, checkChatData, handleCommand } from "./index.mjs";
+import { chatsList, strings } from "../src/index.mjs";
+import { bot, botName } from "../index.js";
 
 export async function handleMessage(ctx) {
     let chatId = ctx.message.chat.id;
@@ -47,7 +47,8 @@ async function judge(ctx) {
                     try {
                         await ctx.unpinChatMessage(chatId, msg.message_id);
                     } catch (err) {
-                        ctx.reply(strings.permission_error.replace('{x}', strings.unpin_message));
+                        ctx.reply(strings.permission_error.replace('{x}', strings.unpin_message))
+                            .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
                     }
                 }
             } else if (chatsList[chatId].del && !chatsList[chatId].whitelist[senderChat.id]) {
