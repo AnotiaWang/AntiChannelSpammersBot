@@ -27,7 +27,7 @@ export async function initWebhook() {
         } else if (req.url === webhookPath) {
             bot.handleUpdate(req.body, res)
                 .catch(err => {
-                    log('Update 处理失败: ', err.message);
+                    log('Update 处理失败: ', err.stack);
                 });
         } else {
             res.statusCode = 404;
