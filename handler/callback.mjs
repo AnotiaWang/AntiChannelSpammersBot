@@ -21,7 +21,7 @@ export async function handleCallbackQuery(ctx) {
                 break;
             case 'deleteChannelMessage':
                 chatsList[chatId].delLinkChanMsg = !chatsList[chatId].delLinkChanMsg;
-                if (chatsList[chatId].unpinChanMsg === chatsList[chatId].unpinChanMsg)
+                if (chatsList[chatId].unpinChanMsg === chatsList[chatId].delLinkChanMsg)
                     delete chatsList[chatId].unpinChanMsg;
                 log(`Chat ${chatId}: 删除链接频道消息 设为 ${chatsList[chatId].delLinkChanMsg}`);
                 ctx.answerCbQuery(strings.settings_saved);
