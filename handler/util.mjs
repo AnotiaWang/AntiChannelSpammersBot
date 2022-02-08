@@ -160,7 +160,7 @@ export function loadBotData() {
 }
 
 export function backupBotData() {
-    bot.telegram.sendDocument(admin, './data/chatsList.json', {
+    bot.telegram.sendDocument(admin, {source: './data/chatsList.json'}, {
         caption: '#backup',
         disable_notification: true
     }).catch((e) => {
@@ -169,6 +169,6 @@ export function backupBotData() {
     });
 }
 
-setInterval(() =>{
+setInterval(() => {
     backupBotData();
 }, 1000 * 3600);
