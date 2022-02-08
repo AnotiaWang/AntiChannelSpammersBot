@@ -73,7 +73,7 @@ class GroupCommands {
         if (!targetChatId)
             return;
         try {
-            await ctx.telegram.banChatSenderChat(chatId, targetChatId[0]);
+            await ctx.tg.banChatSenderChat(chatId, targetChatId[0]);
             cb = await ctx.replyWithHTML(strings.ban_sender_chat_success.replace('{id}', targetChatId[0]));
         } catch (e) {
             cb = await ctx.reply(strings.permission_error.replace('{x}', strings.ban_sender_chat))
@@ -89,7 +89,7 @@ class GroupCommands {
         if (!targetChatId)
             return;
         try {
-            await ctx.telegram.unbanChatSenderChat(chatId, targetChatId[0]);
+            await ctx.tg.unbanChatSenderChat(chatId, targetChatId[0]);
             cb = await ctx.replyWithHTML(strings.unban_sender_chat_success.replace('{id}', targetChatId[0]));
         } catch (e) {
             cb = await ctx.reply(strings.permission_error.replace('{x}', strings.unban_sender_chat))
@@ -104,7 +104,7 @@ class GroupCommands {
             reply_markup: {
                 inline_keyboard: generateKeyboard(ctx.message.chat.id)
             }
-        }).catch(() => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+        }).catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
     }
 }
 
@@ -142,7 +142,7 @@ class OwnerCommands {
         log(`Analytics: 开始统计...`);
         let editMsg = await ctx.reply(strings.analyzing);
         let result = await getChatMembersCount(editMsg);
-        await ctx.telegram.editMessageText(editMsg.chat.id,
+        await ctx.tg.editMessageText(editMsg.chat.id,
             editMsg.message_id,
             undefined,
             strings.stats
