@@ -1,6 +1,19 @@
-import { isAdmin, isGroup, log, deleteMessage, generateKeyboard, getActiveGroupsCount, getChatMembersCount, isPrivate, saveData, getQueryChatId, checkChatData } from "./index.mjs";
-import { chatsList, strings } from '../src/index.mjs';
-import { admin } from "../index.js";
+import {
+    isAdmin,
+    isGroup,
+    log,
+    deleteMessage,
+    generateKeyboard,
+    getActiveGroupsCount,
+    getChatMembersCount,
+    isPrivate,
+    saveData,
+    getQueryChatId,
+    checkChatData
+} from "./index.mjs";
+import {chatsList, strings} from '../src/index.mjs';
+import {admin} from "../index.js";
+import {backupBotData} from "./util.mjs";
 
 export async function handleCommand(ctx) {
     let text = ctx.message.text || ctx.message.caption;
@@ -112,28 +125,28 @@ export class GeneralCommands {
     static async start(ctx) {
         try {
             if (isPrivate(ctx))
-                await ctx.replyWithHTML(strings.welcome_private, { disable_web_page_preview: true });
+                await ctx.replyWithHTML(strings.welcome_private, {disable_web_page_preview: true});
             else if (isGroup(ctx))
-                await ctx.replyWithHTML(strings.welcome_group, { disable_web_page_preview: true });
+                await ctx.replyWithHTML(strings.welcome_group, {disable_web_page_preview: true});
             await deleteMessage(ctx.message, false);
+        } catch (e) {
         }
-        catch (e) { }
     }
 
     static async help(ctx) {
         try {
             if (isPrivate(ctx))
-                await ctx.replyWithHTML(strings.help, { disable_web_page_preview: true });
+                await ctx.replyWithHTML(strings.help, {disable_web_page_preview: true});
             else if (isGroup(ctx))
                 await ctx.replyWithHTML(strings.help, {
                     disable_web_page_preview: true,
                     reply_markup: {
-                        inline_keyboard: [[{ text: strings.button_deleteMsg, callback_data: 'deleteMsg' }]]
+                        inline_keyboard: [[{text: strings.button_deleteMsg, callback_data: 'deleteMsg'}]]
                     }
                 });
             await deleteMessage(ctx.message, false);
+        } catch (e) {
         }
-        catch (e) { }
     }
 }
 
@@ -165,8 +178,13 @@ class OwnerCommands {
         if (confirm && (confirm.toLowerCase() === 'yes' || confirm.toLowerCase() === 'y')) {
             log(`Owner: 已退出`);
             ctx.stop('Owner exit');
-        }
-        else
+        } else
             ctx.replyWithHTML(strings.exit_confirm);
+    }
+
+    static backup(ctx) {
+        ctx.reply('正在备份...');
+        saveData();
+        backupBotData();
     }
 }

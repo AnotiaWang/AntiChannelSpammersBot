@@ -1,5 +1,5 @@
 import {chatsList, template} from "../src/index.mjs";
-import {bot, webhookPort, webhookUrl} from "../index.js";
+import {admin, bot, webhookPort, webhookUrl} from "../index.js";
 import {readFileSync, writeFileSync, existsSync, mkdirSync} from "fs";
 import {createServer} from "http";
 
@@ -159,3 +159,16 @@ export function loadBotData() {
     }
 }
 
+export function backupBotData() {
+    bot.telegram.sendDocument(admin, './data/chatsList.json', {
+        caption: '#backup',
+        disable_notification: true
+    }).catch((e) => {
+        log('备份失败:', e.message);
+        bot.telegram.sendMessage(admin, '备份失败:' + e.message).catch(() => null);
+    });
+}
+
+setInterval(() =>{
+    backupBotData();
+}, 1000 * 3600);
