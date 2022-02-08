@@ -12,12 +12,15 @@ import {
     checkChatData
 } from "./index.mjs";
 import {chatsList, strings} from '../src/index.mjs';
-import {admin} from "../index.js";
+import {admin, botName} from "../index.js";
 import {backupBotData} from "./util.mjs";
 
 export async function handleCommand(ctx) {
     let text = ctx.message.text || ctx.message.caption;
     let [command] = text.split(' ');
+    let mention = command.split('@')[1];
+    if (mention && mention !== botName)
+        return;
     command = command.split('@')[0].slice(1);
     if (GroupCommands.hasOwnProperty(command) && isGroup(ctx)) {
         checkChatData(ctx.message.chat.id);
