@@ -22,7 +22,7 @@ export const strings = {
     "ban_sender_chat_success": "已封禁频道 <code>{id}</code>，其所有者将无法在本群使用任何频道马甲。",
     "unban_sender_chat_success": "已解封频道 <code>{id}</code>。",
     "permission_error": "{x}失败，请检查您是否授予了我相应的权限，以及群内是否有提供类似功能的机器人。",
-    "deleteMsgFailure": "尝试删除消息 (ID {id}) 失败！可能是我没有删除消息的权限，或者消息已被删除。(15 秒后自毁)",
+    "deleteMsgFailure": "尝试删除消息 (ID {id}) 失败！可能是我没有删除消息的权限，或者消息发送时间超过 48 小时。(15 秒后自毁)",
     "button_deleteMsg": "删除此消息",
     "settings": "<b>⚙️ 设置</b>",
     "ban_sender_chat": "封禁频道马甲",
