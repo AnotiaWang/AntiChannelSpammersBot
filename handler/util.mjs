@@ -49,7 +49,7 @@ export async function isAdmin(ctx) {
     let msg = ctx.message || ctx.callbackQuery;
     let chatId = (msg.chat || msg.message.chat).id;
     let fromId = msg.from.id;
-    let result = await ctx.telegram.getChatMember(chatId, fromId);
+    let result = await ctx.tg.getChatMember(chatId, fromId);
     return result.status === 'creator' || result.status === 'administrator' || result.user.username === 'GroupAnonymousBot';
 }
 

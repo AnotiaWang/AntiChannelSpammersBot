@@ -63,16 +63,16 @@ export async function deleteMessage(msg, alertOnFailure, delay) {
     try {
         if (delay)
             setTimeout(() => {
-                bot.tg.deleteMessage(msg.chat.id, msg.message_id)
+                bot.telegram.deleteMessage(msg.chat.id, msg.message_id)
                     .catch(() => {
                     });
             }, delay);
         else
-            await bot.tg.deleteMessage(msg.chat.id, msg.message_id);
+            await bot.telegram.deleteMessage(msg.chat.id, msg.message_id);
         log(`Chat ${msg.chat.id}: 尝试删除消息，ID: ${msg.message_id}` + (delay ? `，延迟 ${delay} 毫秒` : ''));
     } catch (e) {
         if (alertOnFailure && e.message === "can't be deleted") {
-            let delMsg = await bot.tg.sendMessage(msg.chat.id, strings.deleteMsgFailure);
+            let delMsg = await bot.telegram.sendMessage(msg.chat.id, strings.deleteMsgFailure);
             await deleteMessage(delMsg, false, 15000);
         }
         log(`Chat ${msg.chat.id}: 尝试删除消息失败，ID: ${msg.message_id}，原因：${e.message}`);
