@@ -1,6 +1,6 @@
-import { isCommand, isGroup, log, checkChatData, handleCommand } from "./index.mjs";
-import { chatsList, strings } from "../src/index.mjs";
-import { bot, botName } from "../index.js";
+import {isCommand, isGroup, log, checkChatData, handleCommand} from "./index.mjs";
+import {chatsList, strings} from "../src/index.mjs";
+import {bot, botName} from "../index.js";
 
 export async function handleMessage(ctx) {
     let chatId = ctx.message.chat.id;
@@ -44,13 +44,12 @@ async function judge(ctx) {
                 if (chatsList[chatId].delLinkChanMsg)
                     await deleteMessage(msg, true);
                 else if (chatsList[chatId].unpinChanMsg) {
-                    try {
-                        await ctx.unpinChatMessage();
-                    } catch (err) {
+                    ctx.unpinChatMessage().catch(err => {
                         log(`Chat ${chatId}: 取消置顶失败：${err.message}`);
-                        ctx.reply(strings.permission_error.replace('{x}', strings.unpin_message))
-                            .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
-                    }
+                        if (err.message.includes('not enough rights'))
+                            ctx.reply(strings.permission_error.replace('{x}', strings.unpin_message))
+                                .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                    });
                 }
             } else if (chatsList[chatId].del && !chatsList[chatId].whitelist[senderChat.id]) {
                 await deleteMessage(msg, false);
