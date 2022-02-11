@@ -45,8 +45,9 @@ async function judge(ctx) {
                     await deleteMessage(msg, true);
                 else if (chatsList[chatId].unpinChanMsg) {
                     try {
-                        await ctx.unpinChatMessage(chatId, msg.message_id);
+                        await ctx.unpinChatMessage();
                     } catch (err) {
+                        log(`Chat ${chatId}: 取消置顶失败：${err.message}`);
                         ctx.reply(strings.permission_error.replace('{x}', strings.unpin_message))
                             .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
                     }

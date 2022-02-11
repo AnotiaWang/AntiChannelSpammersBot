@@ -10,7 +10,7 @@ export async function initWebhook() {
             log('Webhook 设置成功');
         })
         .catch(err => {
-            log('Webhook 设置失败: ', err.message);
+            log(`Webhook 设置失败: ${err.message}`);
         });
     createServer((req, res) => {
         if (req.url === '/stats') {
@@ -36,13 +36,17 @@ export async function initWebhook() {
     }).listen(webhookPort);
 }
 
-export function log(text, ...args) {
+export function log(text, alert = false) {
     let time = new Date().toLocaleString('zh-CN', {hour12: false});
-    console.log(time + ': ' + text, ...args);
+    console.log(time + ': ' + text);
     if (!existsSync('./log')) {
         mkdirSync('./log');
     }
     writeFileSync('./log/log.txt', time + ': ' + text + '\n', {flag: 'a'});
+    if (alert)
+        bot.telegram.sendMessage(admin, text).catch(err => {
+            log(`消息发送失败: ${err.message}`);
+        });
 }
 
 export async function isAdmin(ctx) {
@@ -164,7 +168,7 @@ export function backupBotData() {
         caption: '#backup',
         disable_notification: true
     }).catch((e) => {
-        log('备份失败:', e.message);
+        log(`备份失败: ${e.message}`, true);
         bot.telegram.sendMessage(admin, '备份失败:' + e.message).catch(() => null);
     });
 }

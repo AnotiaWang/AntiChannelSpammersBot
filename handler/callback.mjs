@@ -22,14 +22,14 @@ export async function handleCallbackQuery(ctx) {
             case 'deleteChannelMessage':
                 chatsList[chatId].delLinkChanMsg = !chatsList[chatId].delLinkChanMsg;
                 if (chatsList[chatId].unpinChanMsg === chatsList[chatId].delLinkChanMsg)
-                    delete chatsList[chatId].unpinChanMsg;
+                    chatsList[chatId].unpinChanMsg = !chatsList[chatId].unpinChanMsg;
                 log(`Chat ${chatId}: 删除链接频道消息 设为 ${chatsList[chatId].delLinkChanMsg}`);
                 ctx.answerCbQuery(strings.settings_saved);
                 break;
             case 'unpinChannelMessage':
                 chatsList[chatId].unpinChanMsg = !chatsList[chatId].unpinChanMsg;
                 if (chatsList[chatId].unpinChanMsg === chatsList[chatId].delLinkChanMsg)
-                    delete chatsList[chatId].delLinkChanMsg;
+                    chatsList[chatId].delLinkChanMsg = !chatsList[chatId].delLinkChanMsg;
                 log(`Chat ${chatId}: 取消频道消息置顶 设为 ${chatsList[chatId].unpinChanMsg}`);
                 if (chatsList[chatId].unpinChanMsg)
                     ctx.answerCbQuery(strings.settings_saved + '（' + strings.pin_permission_needed + '）', {show_alert: true});
