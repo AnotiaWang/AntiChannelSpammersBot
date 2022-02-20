@@ -67,11 +67,11 @@ export function isPrivate(ctx) {
 
 export function checkChatData(chatId) {
     if (!chatsList[chatId])
-        Object.assign(chatsList, {[chatId]: template});
+        chatsList[chatId] = deepClone(template);
     else {
         for (let a in template) {
             if (!chatsList[chatId][a])
-                Object.assign(chatsList[chatId], {[a]: template[a]});
+                chatsList[chatId][a] = deepClone(template[a]);
         }
     }
 }
@@ -171,6 +171,49 @@ export function backupBotData() {
         log(`备份失败: ${e.message}`, true);
         bot.telegram.sendMessage(admin, '备份失败:' + e.message).catch(() => null);
     });
+}
+
+// https://segmentfault.com/a/1190000018903274
+function deepClone(obj) {
+    let copy;
+
+    // Handle the 3 simple types, and null or undefined
+    if (null == obj || "object" != typeof obj) return obj;
+
+    // Handle Date
+    if (obj instanceof Date) {
+        copy = new Date();
+        copy.setTime(obj.getTime());
+        return copy;
+    }
+
+    // Handle Array
+    if (obj instanceof Array) {
+        copy = [];
+        for (let i = 0, len = obj.length; i < len; i++) {
+            copy[i] = deepClone(obj[i]);
+        }
+        return copy;
+    }
+
+    // Handle Function
+    if (obj instanceof Function) {
+        copy = function () {
+            return obj.apply(this, arguments);
+        }
+        return copy;
+    }
+
+    // Handle Object
+    if (obj instanceof Object) {
+        copy = {};
+        for (let attr in obj) {
+            if (obj.hasOwnProperty(attr)) copy[attr] = deepClone(obj[attr]);
+        }
+        return copy;
+    }
+
+    throw new Error("Unable to copy obj as type isn't supported " + obj.constructor.name);
 }
 
 setInterval(() => {

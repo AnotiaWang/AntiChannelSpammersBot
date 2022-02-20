@@ -44,8 +44,8 @@ async function judge(ctx) {
                 if (chatsList[chatId].delLinkChanMsg)
                     await deleteMessage(msg, true);
                 else if (chatsList[chatId].unpinChanMsg) {
-                    ctx.unpinChatMessage().catch(err => {
-                        log(`Chat ${chatId}: 取消置顶失败：${err.message}`);
+                    await ctx.unpinChatMessage({message_id: msg.message_id}).catch(err => {
+                        log(`Chat ${chatId}: 取消置顶 (ID ${msg.message_id}) 失败：${err.message}`);
                         if (err.message.includes('not enough rights'))
                             ctx.reply(strings.permission_error.replace('{x}', strings.unpin_message))
                                 .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
@@ -71,7 +71,7 @@ export async function deleteMessage(msg, alertOnFailure, delay) {
             await bot.telegram.deleteMessage(msg.chat.id, msg.message_id);
         log(`Chat ${msg.chat.id}: 尝试删除消息，ID: ${msg.message_id}` + (delay ? `，延迟 ${delay} 毫秒` : ''));
     } catch (e) {
-        if (alertOnFailure && e.message === "can't be deleted") {
+        if (alertOnFailure && e.message.includes("not enough rights")) {
             let delMsg = await bot.telegram.sendMessage(msg.chat.id, strings.deleteMsgFailure);
             await deleteMessage(delMsg, false, 15000);
         }

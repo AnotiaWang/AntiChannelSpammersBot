@@ -37,10 +37,9 @@ export async function handleCallbackQuery(ctx) {
                     ctx.answerCbQuery(strings.settings_saved);
                 break;
             case 'deleteMsg':
-                ctx.deleteMessage(query.message.message_id).catch(() => {
-                    log(`Chat ${chatId}: 删除消息失败, ID: ${query.message.message_id}`);
-                    ctx.answerCbQuery('删除消息失败，请稍后再试').catch(() =>
-                        log(`Chat ${chatId}: 回调消息删除失败, Query ID: ${query.id}`));
+                ctx.deleteMessage(query.message.message_id).catch((e) => {
+                    log(`Chat ${chatId}: 删除消息失败, ID: ${query.message.message_id}, error: ${e.message}`);
+                    ctx.answerCbQuery('删除消息失败，请稍后再试').catch(() => null);
                 });
                 return;
             case 'whitelist':
