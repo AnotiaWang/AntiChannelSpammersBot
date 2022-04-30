@@ -1,5 +1,5 @@
-import {strings, chatsList} from '../src/index.mjs';
-import {checkChatData, generateKeyboard, isAdmin, log, saveData} from "./index.mjs";
+import { strings, chatsList } from '../src/index.mjs';
+import { checkChatData, generateKeyboard, isAdmin, log, saveData } from "./index.mjs";
 
 export async function handleCallbackQuery(ctx) {
     let query = ctx.callbackQuery;
@@ -21,18 +21,18 @@ export async function handleCallbackQuery(ctx) {
                 break;
             case 'deleteChannelMessage':
                 chatsList[chatId].delLinkChanMsg = !chatsList[chatId].delLinkChanMsg;
-                if (chatsList[chatId].unpinChanMsg === chatsList[chatId].delLinkChanMsg)
+                if (chatsList[chatId].unpinChanMsg && chatsList[chatId].delLinkChanMsg)
                     chatsList[chatId].unpinChanMsg = false;
                 log(`Chat ${chatId}: 删除链接频道消息 设为 ${chatsList[chatId].delLinkChanMsg}`);
                 ctx.answerCbQuery(strings.settings_saved);
                 break;
             case 'unpinChannelMessage':
                 chatsList[chatId].unpinChanMsg = !chatsList[chatId].unpinChanMsg;
-                if (chatsList[chatId].unpinChanMsg === chatsList[chatId].delLinkChanMsg)
+                if (chatsList[chatId].unpinChanMsg && chatsList[chatId].delLinkChanMsg)
                     chatsList[chatId].delLinkChanMsg = false;
                 log(`Chat ${chatId}: 取消频道消息置顶 设为 ${chatsList[chatId].unpinChanMsg}`);
                 if (chatsList[chatId].unpinChanMsg)
-                    ctx.answerCbQuery(strings.settings_saved + '（' + strings.pin_permission_needed + '）', {show_alert: true});
+                    ctx.answerCbQuery(strings.settings_saved + '（' + strings.pin_permission_needed + '）', { show_alert: true });
                 else
                     ctx.answerCbQuery(strings.settings_saved);
                 break;
@@ -60,7 +60,7 @@ export async function handleCallbackQuery(ctx) {
         }
         ctx.editMessageText(text, {
             parse_mode: 'HTML',
-            reply_markup: {inline_keyboard: generateKeyboard(chatId, isWhitelist)}
+            reply_markup: { inline_keyboard: generateKeyboard(chatId, isWhitelist) }
         }).catch((err) => log(`Chat ${chatId}: 编辑设置消息 (ID ${query.message.message_id}) 失败: ${err.message}`));
         saveData();
     }

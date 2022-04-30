@@ -28,7 +28,6 @@ bot.on('callback_query', (ctx) => handleCallbackQuery(ctx));
 bot.catch((err) =>
     log(err.message + '\n' + err.stack)
 );
-const botInfo = await bot.telegram.getMe();
-export const botName = botInfo.username;
+const botName = (await bot.telegram.getMe()).username;
 await bot.launch();
 log(`${botName} 启动完成`);

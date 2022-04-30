@@ -1,6 +1,6 @@
-import {isCommand, isGroup, log, checkChatData, handleCommand} from "./index.mjs";
-import {chatsList, strings} from "../src/index.mjs";
-import {bot, botName} from "../index.js";
+import { isCommand, isGroup, log, checkChatData, handleCommand } from "./index.mjs";
+import { chatsList, strings } from "../src/index.mjs";
+import { bot } from "../index.js";
 
 export async function handleMessage(ctx) {
     let chatId = ctx.message.chat.id;
@@ -10,7 +10,7 @@ export async function handleMessage(ctx) {
         let msg = ctx.message;
         if (msg.new_chat_members)
             for (let x in msg.new_chat_members) {
-                if (msg.new_chat_members[x].username === botName) {
+                if (msg.new_chat_members[x].username === ctx.me) {
                     if (!chatsList[chatId])
                         chatsList[chatId] = {};
                     log(`Chat ${chatId}: 被加入群组`);
@@ -18,7 +18,7 @@ export async function handleMessage(ctx) {
                 }
             }
         // // 机器人被踢出群组，清理配置文件
-        else if (msg.left_chat_member && msg.left_chat_member.username === botName) {
+        else if (msg.left_chat_member && msg.left_chat_member.username === ctx.me) {
             delete chatsList[chatId];
             log(`Chat ${chatId}: 已被移除。`);
             return;

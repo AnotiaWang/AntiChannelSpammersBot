@@ -11,15 +11,15 @@ import {
     getQueryChatId,
     checkChatData
 } from "./index.mjs";
-import {chatsList, strings} from '../src/index.mjs';
-import {admin, botName} from "../index.js";
-import {backupBotData} from "./util.mjs";
+import { chatsList, strings } from '../src/index.mjs';
+import { admin } from "../index.js";
+import { backupBotData } from "./util.mjs";
 
 export async function handleCommand(ctx) {
     let text = ctx.message.text || ctx.message.caption;
     let [command] = text.split(' ');
     let mention = command.split('@')[1];
-    if (mention && mention !== botName)
+    if (mention && mention !== ctx.me)
         return;
     command = command.split('@')[0].slice(1);
     if (GroupCommands.hasOwnProperty(command) && isGroup(ctx)) {
@@ -46,7 +46,7 @@ class GroupCommands {
 
     static off(ctx) {
         chatsList[ctx.message.chat.id].del = false;
-        ctx.reply(strings.del_channel_message_off).catch(() => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+        ctx.reply(strings.del_channel_message_off).catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
     }
 
     static async promote(ctx) {
@@ -56,11 +56,11 @@ class GroupCommands {
             return;
         if (chatsList[chatId].whitelist[targetChatId[0]]) {
             cb = await ctx.reply(strings.x_already_in_whitelist)
-                .catch(() => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
         } else {
             chatsList[chatId].whitelist[targetChatId[0]] = targetChatId[1];
             cb = await ctx.reply(strings.x_added_to_whitelist.replace('{id}', targetChatId[0]).replace('{x}', targetChatId[1]))
-                .catch(() => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
         }
         log(`Chat ${chatId}: 白名单添加 ${targetChatId[0]}`);
         await deleteMessage(cb, false, 15000);
@@ -74,10 +74,10 @@ class GroupCommands {
         if (chatsList[chatId].whitelist[targetChatId[0]]) {
             delete chatsList[chatId].whitelist[targetChatId[0]];
             cb = await ctx.reply(strings.x_removed_from_whitelist.replace('{id}', targetChatId[0]).replace('{x}', targetChatId[1]))
-                .catch(() => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
         } else {
             cb = await ctx.reply(strings.x_not_in_whitelist)
-                .catch(() => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
         }
         log(`Chat ${chatId}: 白名单删除 ${targetChatId[0]}`);
         await deleteMessage(cb, false, 15000);
@@ -128,9 +128,14 @@ export class GeneralCommands {
     static async start(ctx) {
         try {
             if (isPrivate(ctx))
-                await ctx.replyWithHTML(strings.welcome_private, {disable_web_page_preview: true});
+                await ctx.replyWithHTML(strings.welcome_private, {
+                    reply_markup: {
+                        inline_keyboard: [[{ text: strings.add_to_group, url: `https://t.me/${ctx.me}?startgroup=start` }]]
+                    },
+                    disable_web_page_preview: true
+                });
             else if (isGroup(ctx))
-                await ctx.replyWithHTML(strings.welcome_group, {disable_web_page_preview: true});
+                await ctx.replyWithHTML(strings.welcome_group, { disable_web_page_preview: true });
             await deleteMessage(ctx.message, false);
         } catch (e) {
         }
@@ -139,12 +144,12 @@ export class GeneralCommands {
     static async help(ctx) {
         try {
             if (isPrivate(ctx))
-                await ctx.replyWithHTML(strings.help, {disable_web_page_preview: true});
+                await ctx.replyWithHTML(strings.help, { disable_web_page_preview: true });
             else if (isGroup(ctx))
                 await ctx.replyWithHTML(strings.help, {
                     disable_web_page_preview: true,
                     reply_markup: {
-                        inline_keyboard: [[{text: strings.button_deleteMsg, callback_data: 'deleteMsg'}]]
+                        inline_keyboard: [[{ text: strings.button_deleteMsg, callback_data: 'deleteMsg' }]]
                     }
                 });
             await deleteMessage(ctx.message, false);
@@ -182,7 +187,7 @@ class OwnerCommands {
             log(`Owner: 已退出`);
             ctx.stop('Owner exit');
         } else
-            ctx.replyWithHTML(strings.exit_confirm);
+            ctx.replyWithHTML(strings.exit_confirm).catch(() => null);
     }
 
     static backup(ctx) {

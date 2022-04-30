@@ -1,7 +1,7 @@
-import {chatsList, template} from "../src/index.mjs";
-import {admin, bot, webhookPort, webhookUrl} from "../index.js";
-import {readFileSync, writeFileSync, existsSync, mkdirSync} from "fs";
-import {createServer} from "http";
+import { chatsList, template } from "../src/index.mjs";
+import { admin, bot, webhookPort, webhookUrl } from "../index.js";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { createServer } from "http";
 
 export async function initWebhook() {
     const webhookPath = new URL(webhookUrl).pathname;
@@ -14,7 +14,7 @@ export async function initWebhook() {
         });
     createServer((req, res) => {
         if (req.url === '/stats') {
-            res.writeHead(200, {'Content-Type': 'text/html, charset=utf-8'});
+            res.writeHead(200, { 'Content-Type': 'text/html, charset=utf-8' });
             res.write(JSON.stringify({
                 "schemaVersion": 1,
                 "label": "使用中群组",
@@ -25,10 +25,9 @@ export async function initWebhook() {
             }));
             res.end();
         } else if (req.url === webhookPath) {
-            bot.handleUpdate(req.body, res)
-                .catch(err => {
-                    log(`Update 处理失败: 消息：${req.body}，错误信息：${err.stack}`);
-                });
+            bot.handleUpdate(req.body, res).catch(err => {
+                log(`Update 处理失败: 消息：${req.body}，错误信息：${err.stack}`);
+            });
         } else {
             res.statusCode = 404;
             res.end('Not found');
@@ -37,16 +36,17 @@ export async function initWebhook() {
 }
 
 export function log(text, alert = false) {
-    let time = new Date().toLocaleString('zh-CN', {hour12: false});
+    let time = new Date().toLocaleString('zh-CN', { hour12: false });
     console.log(time + ': ' + text);
     if (!existsSync('./log')) {
         mkdirSync('./log');
     }
-    writeFileSync('./log/log.txt', time + ': ' + text + '\n', {flag: 'a'});
-    if (alert)
+    writeFileSync('./log/log.txt', time + ': ' + text + '\n', { flag: 'a' });
+    if (alert) {
         bot.telegram.sendMessage(admin, text).catch(err => {
             log(`消息发送失败: ${err.message}`);
         });
+    }
 }
 
 export async function isAdmin(ctx) {
@@ -85,13 +85,13 @@ export function generateKeyboard(chatId, isWhitelist) {
     if (isWhitelist) {
         let whitelist = chatsList[chatId].whitelist || {};
         for (let channel in whitelist)
-            keyboard.push([{text: chatsList[chatId].whitelist[channel], callback_data: 'demote_' + channel}]);
+            keyboard.push([{ text: chatsList[chatId].whitelist[channel], callback_data: 'demote_' + channel }]);
         if (!Object.keys(whitelist).length)
-            keyboard.push([{text: '（当前无白名单）🔙 返回', callback_data: 'back'}]);
+            keyboard.push([{ text: '（当前无白名单）🔙 返回', callback_data: 'back' }]);
         else
-            keyboard.push([{text: '🔙 返回', callback_data: 'back'}]);
+            keyboard.push([{ text: '🔙 返回', callback_data: 'back' }]);
     } else {
-        keyboard.push([{text: '删除频道马甲消息：' + (chatsList[chatId].del ? '✅' : '❌'), callback_data: 'switch'}]);
+        keyboard.push([{ text: '删除频道马甲消息：' + (chatsList[chatId].del ? '✅' : '❌'), callback_data: 'switch' }]);
         keyboard.push([{
             text: '删除匿名管理消息：' + (chatsList[chatId].delAnonMsg ? '✅' : '❌'),
             callback_data: 'deleteAnonymousMessage'
@@ -104,8 +104,8 @@ export function generateKeyboard(chatId, isWhitelist) {
             text: '解除频道消息在群内置顶：' + (chatsList[chatId].unpinChanMsg ? '✅' : '❌'),
             callback_data: 'unpinChannelMessage'
         }])
-        keyboard.push([{text: '频道白名单', callback_data: 'whitelist'}]);
-        keyboard.push([{text: '删除此消息', callback_data: 'deleteMsg'}]);
+        keyboard.push([{ text: '频道白名单', callback_data: 'whitelist' }]);
+        keyboard.push([{ text: '删除此消息', callback_data: 'deleteMsg' }]);
     }
     return keyboard;
 }
@@ -164,7 +164,7 @@ export function loadBotData() {
 }
 
 export function backupBotData() {
-    bot.telegram.sendDocument(admin, {source: './data/chatsList.json'}, {
+    bot.telegram.sendDocument(admin, { source: './data/chatsList.json' }, {
         caption: '#backup',
         disable_notification: true
     }).catch((e) => {
