@@ -3,11 +3,11 @@ import { chatsList, strings } from "../src/index.mjs";
 import { bot } from "../index.js";
 
 export async function handleMessage(ctx) {
-    let chatId = ctx.message.chat.id;
-    let text = ctx.message.text || ctx.message.caption;
+    const chatId = ctx.message.chat.id;
+    const text = ctx.message.text || ctx.message.caption;
     if (isGroup(ctx)) {
         checkChatData(chatId);
-        let msg = ctx.message;
+        const msg = ctx.message;
         if (msg.new_chat_members)
             for (let x in msg.new_chat_members) {
                 if (msg.new_chat_members[x].username === ctx.me) {
@@ -17,22 +17,24 @@ export async function handleMessage(ctx) {
                     await ctx.replyWithHTML(strings.welcome_group).catch(e => log(`Chat ${chatId}: 发送欢迎消息失败：${e.message}`));
                 }
             }
-        // // 机器人被踢出群组，清理配置文件
+        // 机器人被踢出群组，清理配置文件
         else if (msg.left_chat_member && msg.left_chat_member.username === ctx.me) {
             delete chatsList[chatId];
             log(`Chat ${chatId}: 已被移除。`);
             return;
         }
     }
-    if (text && isCommand(text))
+    if (text && isCommand(text)) {
         await handleCommand(ctx);
-    else
+    }
+    else {
         await judge(ctx);
+    }
 }
 
 async function judge(ctx) {
-    let msg = ctx.message;
-    let chatId = msg.chat.id.toString(), chatType = msg.chat.type;
+    const msg = ctx.message;
+    const chatId = msg.chat.id.toString(), chatType = msg.chat.type;
 
     if (chatType === 'private')
         return ctx.reply(strings.group_only);
@@ -44,38 +46,54 @@ async function judge(ctx) {
                 if (chatsList[chatId].delLinkChanMsg)
                     await deleteMessage(msg, true);
                 else if (chatsList[chatId].unpinChanMsg) {
-                    await ctx.tg.unpinChatMessage(chatId, msg.message_id).catch(err => {
+                    await ctx.telegram.unpinChatMessage(chatId, msg.message_id).catch(err => {
                         log(`Chat ${chatId}: 取消置顶 (ID ${msg.message_id}) 失败：${err.message}`);
-                        if (err.message.includes('not enough rights'))
+                        if (err.message.includes('not enough rights')) {
                             ctx.reply(strings.permission_error.replace('{x}', strings.unpin_message))
                                 .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                        }
                     });
                 }
-            } else if (chatsList[chatId].del && !chatsList[chatId].whitelist[senderChat.id]) {
+            }
+            else if (chatsList[chatId].del && !chatsList[chatId].whitelist[senderChat.id]) {
                 await deleteMessage(msg, false);
             }
-        } else if ((senderChat.type === 'group' || senderChat.type === 'supergroup') && chatsList[chatId].delAnonMsg)
+        }
+        else if ((senderChat.type === 'group' || senderChat.type === 'supergroup') && chatsList[chatId].delAnonMsg) {
             await deleteMessage(msg, true);
+        }
     }
 }
 
-export async function deleteMessage(msg, alertOnFailure, delay) {
+export async function deleteMessage(msg, alertOnFailure = true, delay = 0) {
+    const chatId = msg.chat.id, msgId = msg.message_id || msg[0].message_id;
     try {
-        if (delay)
+        if (delay) {
             setTimeout(() => {
-                bot.telegram.deleteMessage(msg.chat.id, msg.message_id)
-                    .catch(() => {
-                    });
+                bot.telegram.deleteMessage(chatId, msgId)
+                    .catch(() => null);
             }, delay);
-        else
-            await bot.telegram.deleteMessage(msg.chat.id, msg.message_id);
-        log(`Chat ${msg.chat.id}: 尝试删除消息，ID: ${msg.message_id}` + (delay ? `，延迟 ${delay} 毫秒` : ''));
-    } catch (e) {
-        if (alertOnFailure && e.message.includes("not enough rights")) {
-            let delMsg = await bot.telegram.sendMessage(msg.chat.id, strings.deleteMsgFailure);
-            await deleteMessage(delMsg, false, 15000);
         }
-        log(`Chat ${msg.chat.id}: 尝试删除消息失败，ID: ${msg.message_id}，原因：${e.message}`);
+        else {
+            await bot.telegram.deleteMessage(chatId, msgId);
+        }
+        log(`Chat ${chatId}: 尝试删除消息，ID: ${msgId}` + (delay ? `，延迟 ${delay} 毫秒` : ''));
+    }
+    catch (e) {
+        if (alertOnFailure) {
+            if (e.message.includes("not enough rights")) {
+                const delMsg = await bot.telegram.sendMessage(
+                    chatId,
+                    strings.deleteMsgFailure
+                        .replace('{id}', msgId)
+                        .replace('{err}', e.message)
+                ).catch(() => null);
+                if (delMsg) {
+                    await deleteMessage(delMsg, false, 15000);
+                }
+            }
+        }
+        log(`Chat ${chatId}: 尝试删除消息失败，ID: ${msgId}，原因：${e.message}`);
     }
 }
 
@@ -99,7 +117,7 @@ export async function getQueryChatId(ctx) {
         }
     }
     try {
-        let result = await ctx.tg.getChat(queryChatId);
+        let result = await ctx.telegram.getChat(queryChatId);
         if (result.type === 'channel')
             return [result.id.toString(), result.title];
         else {

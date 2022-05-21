@@ -9,9 +9,7 @@ export async function initWebhook() {
         .then(() => {
             log('Webhook 设置成功');
         })
-        .catch(err => {
-            log(`Webhook 设置失败: ${err.message}`);
-        });
+        .catch((e) => log(`Webhook 设置失败: ${e.message}`));
     createServer((req, res) => {
         if (req.url === '/stats') {
             res.writeHead(200, { 'Content-Type': 'text/html, charset=utf-8' });
@@ -50,10 +48,10 @@ export function log(text, alert = false) {
 }
 
 export async function isAdmin(ctx) {
-    let msg = ctx.message || ctx.callbackQuery;
-    let chatId = (msg.chat || msg.message.chat).id;
-    let fromId = msg.from.id;
-    let result = await ctx.tg.getChatMember(chatId, fromId);
+    const msg = ctx.message || ctx.callbackQuery;
+    const chatId = (msg.chat || msg.message.chat).id;
+    const fromId = msg.from.id;
+    const result = await ctx.telegram.getChatMember(chatId, fromId);
     return result.status === 'creator' || result.status === 'administrator' || result.user.username === 'GroupAnonymousBot';
 }
 
@@ -66,8 +64,9 @@ export function isPrivate(ctx) {
 }
 
 export function checkChatData(chatId) {
-    if (!chatsList[chatId])
+    if (!chatsList[chatId]) {
         chatsList[chatId] = deepClone(template);
+    }
     else {
         for (let a in template) {
             if (!chatsList[chatId][a])

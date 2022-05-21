@@ -60,7 +60,9 @@ export async function handleCallbackQuery(ctx) {
         }
         ctx.editMessageText(text, {
             parse_mode: 'HTML',
-            reply_markup: { inline_keyboard: generateKeyboard(chatId, isWhitelist) }
+            reply_markup: {
+                inline_keyboard: generateKeyboard(chatId, isWhitelist)
+            }
         }).catch((err) => log(`Chat ${chatId}: 编辑设置消息 (ID ${query.message.message_id}) 失败: ${err.message}`));
         saveData();
     }
