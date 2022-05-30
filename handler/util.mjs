@@ -30,7 +30,7 @@ export async function initWebhook() {
             res.statusCode = 404;
             res.end('Not found');
         }
-    }).listen(webhookPort);
+    }).listen(process.env.PORT || webhookPort || 8888);
 }
 
 export function log(text, alert = false) {

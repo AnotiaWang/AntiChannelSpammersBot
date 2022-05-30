@@ -1,4 +1,4 @@
-import {Telegraf} from "telegraf";
+import { Telegraf } from "telegraf";
 import 'dotenv/config';
 // import HttpsProxyAgent from 'https-proxy-agent'; // 如果需代理，导入此包
 import {
@@ -10,7 +10,7 @@ import {
     initWebhook
 } from './handler/index.mjs';
 
-export const {token, admin, webhookUrl, webhookPort} = process.env;
+export const { token, admin, webhookUrl, webhookPort } = process.env;
 export const bot = new Telegraf(token);
 
 

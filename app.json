@@ -1,0 +1,41 @@
+{
+  "name": "反频道马甲 Bot",
+  "description": "This Telegram bot can delete messages from users appearing as channels, as well as those from anonymous admins and linked channels.",
+  "keywords": [
+    "Telegram",
+    "Nodejs",
+    "bot"
+  ],
+  "website": "https://t.me/AntiChannelSpammersBot",
+  "repository": "https://github.com/AnotiaWang/AntiChannelSpammersBot",
+  "env": {
+    "token": {
+      "description": "Telegram 机器人的令牌，可从 @BotFather 获得 | Your Telegram bot token, get it from @BotFather"
+    },
+    "admin": {
+      "description": "你的 UID，可从 @getidsbot 等机器人处获得 | Your unique identifier (UID). Can be obtained from bots like @getidsbot"
+    },
+    "webhookUrl": {
+      "description": "机器人的 WebHook 地址。例：如果你的项目名为 acsbot，则此处填 \"https://acsbot.herokuapp.com/\"，不带引号 | The WebHook URL of the bot. Should be the public URL of your project. e.g. if your project name is 'acsbot', set this field to https://acsbot.herokuapp.com/"
+    },
+    "webhookPort": {
+      "description": "WebHook 端口，请勿修改 | The WebHook port of the bot. Leave this to 8888.",
+      "value": "8888"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "environments": {
+    "test": {
+      "scripts": {
+        "test": "npm install && node index"
+      }
+    },
+    "start": {
+      "scripts": "npm install && node index"
+    }
+  }
+}

@@ -23,23 +23,29 @@
 
 ## 使用方法
 
+### 1. 部署至 Heroku
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/AnotiaWang/AntiChannelSpammersBot)
+
+### 2. 手动部署
+
 1. Clone 本仓库
 
 2. 复制 `.env.example` 并重命名为 `.env`
 
-2. 编辑 `.env`：
+3. 编辑 `.env`：
 
-	- `token` : 从 BotFather 拿到的 token
+    - `token` : 从 BotFather 拿到的 token
 
-	- `admin` : 你的 UID (Unique Identifier，可使用第三方客户端或 @GetIDsBot 获取)，如果不需要统计功能，可以不配置
+    - `admin` : 你的 UID (Unique Identifier，可使用第三方客户端或 @GetIDsBot 获取)，如果不需要统计功能，可以不配置
 
-	- `webhookUrl` : WebHook 地址。填写完整 URL，**行尾须包含 `/`**（ 如 `https://bot.blabla.com:443/bot` ）。如不使用则留空。
+    - `webhookUrl` : WebHook 地址。填写完整 URL，**行尾须包含 `/`**（ 如 `https://bot.blabla.com:443/bot` ）。如不使用则留空。
 
     - `webhookPort`: HTTP 服务器监听的反代端口，如不使用则留空
 
    > 如使用 WebHook ，支持生成[统计 badge](https://shields.io)，默认的数据接口在 `[域名]/stats` ，样式见代码。图片地址使用 `https://shields.io/endpoint?url=[域名]/stats` 即可。
 
-3. 运行：
+4. 运行：
 
    ```bash
    npm install && npm start
