@@ -1,5 +1,6 @@
 export const template = {
     del: false,
+    delCmd: false,
     delAnonMsg: false,
     delLinkChanMsg: false,
     unpinChanMsg: false,
@@ -7,4 +8,3 @@ export const template = {
 }
 
 export var chatsList = {};
-

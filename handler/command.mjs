@@ -8,33 +8,43 @@ import {
     getChatMembersCount,
     isPrivate,
     saveData,
-    getQueryChatId,
-    checkChatData
+    getQueryChatId
 } from "./index.mjs";
 import { chatsList, strings } from '../src/index.mjs';
 import { admin } from "../index.js";
 import { backupBotData } from "./util.mjs";
 
 export async function handleCommand(ctx) {
+    const chatId = ctx.chat.id, fromId = ctx.from.id;
     const text = ctx.message.text || ctx.message.caption;
     let [command] = text.split(' ');
     let mention = command.split('@')[1];
-    if (mention && mention !== ctx.me)
-        return;
+
     command = command.split('@')[0].slice(1);
-    if (GroupCommands.hasOwnProperty(command) && isGroup(ctx)) {
-        checkChatData(ctx.message.chat.id);
-        if (await isAdmin(ctx)) {
-            GroupCommands[command](ctx);
+
+    if (isGroup(ctx)) {
+        if (chatsList[chatId].delCmd) {
+            deleteMessage(ctx.message, false, 10000).catch(() => null);
         }
-        else {
-            let cb = await ctx.replyWithHTML(strings.operator_not_admin.replace('{id}', ctx.message.from.id));
-            await deleteMessage(cb, false, 15000);
+        if (mention && mention !== ctx.me) return;
+        if (typeof GeneralCommands[command] === 'function') {
+            await GeneralCommands[command](ctx);
         }
-        await deleteMessage(ctx.message, false);
+        else if (typeof GroupCommands[command] === 'function') {
+            if (await isAdmin(ctx)) {
+                GroupCommands[command](ctx);
+            }
+            else {
+                const cb = await ctx.replyWithHTML(strings.operator_not_admin.replace('{id}', ctx.message.from.id));
+                await deleteMessage(cb, false, 15000);
+            }
+        }
     }
     else if (isPrivate(ctx)) {
-        if (OwnerCommands.hasOwnProperty(command) && ctx.message.from.id.toString() === admin) {
+        if (typeof GeneralCommands[command] === 'function') {
+            await GeneralCommands[command](ctx);
+        }
+        else if (fromId.toString() === admin && OwnerCommands.hasOwnProperty(command)) {
             OwnerCommands[command](ctx);
         }
     }
@@ -155,7 +165,7 @@ export class GeneralCommands {
                 await ctx.replyWithHTML(strings.help, {
                     disable_web_page_preview: true,
                     reply_markup: {
-                        inline_keyboard: [[{ text: strings.button_deleteMsg, callback_data: 'deleteMsg' }]]
+                        inline_keyboard: [[{ text: strings.deleteMsg, callback_data: 'deleteMsg' }]]
                     }
                 });
             await deleteMessage(ctx.message, false);

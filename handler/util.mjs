@@ -1,4 +1,4 @@
-import { chatsList, template } from "../src/index.mjs";
+import { chatsList, strings, template } from "../src/index.mjs";
 import { admin, bot, webhookPort, webhookUrl } from "../index.js";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { createServer } from "http";
@@ -64,13 +64,14 @@ export function isPrivate(ctx) {
 }
 
 export function checkChatData(chatId) {
-    if (!chatsList[chatId]) {
+    if (typeof chatsList[chatId] === 'undefined') {
         chatsList[chatId] = deepClone(template);
     }
     else {
         for (let a in template) {
-            if (!chatsList[chatId][a])
+            if (typeof chatsList[chatId][a] === 'undefined') {
                 chatsList[chatId][a] = deepClone(template[a]);
+            }
         }
     }
 }
@@ -80,31 +81,25 @@ export function isCommand(text) {
 }
 
 export function generateKeyboard(chatId, isWhitelist) {
+    const data = chatsList[chatId];
     let keyboard = [];
     if (isWhitelist) {
-        let whitelist = chatsList[chatId].whitelist || {};
-        for (let channel in whitelist)
-            keyboard.push([{ text: chatsList[chatId].whitelist[channel], callback_data: 'demote_' + channel }]);
-        if (!Object.keys(whitelist).length)
-            keyboard.push([{ text: '（当前无白名单）🔙 返回', callback_data: 'back' }]);
-        else
-            keyboard.push([{ text: '🔙 返回', callback_data: 'back' }]);
-    } else {
-        keyboard.push([{ text: '删除频道马甲消息：' + (chatsList[chatId].del ? '✅' : '❌'), callback_data: 'switch' }]);
-        keyboard.push([{
-            text: '删除匿名管理消息：' + (chatsList[chatId].delAnonMsg ? '✅' : '❌'),
-            callback_data: 'deleteAnonymousMessage'
-        }]);
-        keyboard.push([{
-            text: '删除来自关联频道的消息：' + (chatsList[chatId].delLinkChanMsg ? '✅' : '❌'),
-            callback_data: 'deleteChannelMessage'
-        }]);
-        keyboard.push([{
-            text: '解除频道消息在群内置顶：' + (chatsList[chatId].unpinChanMsg ? '✅' : '❌'),
-            callback_data: 'unpinChannelMessage'
-        }])
-        keyboard.push([{ text: '频道白名单', callback_data: 'whitelist' }]);
-        keyboard.push([{ text: '删除此消息', callback_data: 'deleteMsg' }]);
+        const whitelist = data.whitelist || {};
+        for (let channel in whitelist) {
+            keyboard.push([{ text: data.whitelist[channel], callback_data: 'demote_' + channel }]);
+        }
+        keyboard.push([{ text: `${Object.keys(whitelist).length ? '' : '(空) '}🔙 返回`, callback_data: 'back' }]);
+    }
+    else {
+        keyboard = [
+            [{ text: `${strings.deleteChannelSenderMsg} ${data.del ? '✅' : '❌'}`, callback_data: 'switch' }],
+            [{ text: `${strings.deleteAnonymousAdminMsg} ${data.delAnonMsg ? '✅' : '❌'}`, callback_data: 'deleteAnonymousMessage' }],
+            [{ text: `${strings.deleteLinkedChannelMsg} ${data.delLinkChanMsg ? '✅' : '❌'}`, callback_data: 'deleteChannelMessage' }],
+            [{ text: `${strings.unpinChannelMsg} ${data.unpinChanMsg ? '✅' : '❌'}`, callback_data: 'unpinChannelMessage' }],
+            [{ text: `${strings.deleteCommand} ${data.delCmd ? '✅' : '❌'}`, callback_data: 'deleteCommand' }],
+            [{ text: strings.channelWhitelist, callback_data: 'whitelist' }],
+            [{ text: strings.deleteMsg, callback_data: 'deleteMsg' }],
+        ];
     }
     return keyboard;
 }

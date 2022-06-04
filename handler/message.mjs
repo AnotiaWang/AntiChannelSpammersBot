@@ -3,12 +3,12 @@ import { chatsList, strings } from "../src/index.mjs";
 import { bot } from "../index.js";
 
 export async function handleMessage(ctx) {
-    const chatId = ctx.message.chat.id;
+    const chatId = ctx.message.chat.id, chatType = ctx.chat.type;
     const text = ctx.message.text || ctx.message.caption;
     if (isGroup(ctx)) {
         checkChatData(chatId);
         const msg = ctx.message;
-        if (msg.new_chat_members)
+        if (msg.new_chat_members) {
             for (let x in msg.new_chat_members) {
                 if (msg.new_chat_members[x].username === ctx.me) {
                     if (!chatsList[chatId])
@@ -17,30 +17,34 @@ export async function handleMessage(ctx) {
                     await ctx.replyWithHTML(strings.welcome_group).catch(e => log(`Chat ${chatId}: 发送欢迎消息失败：${e.message}`));
                 }
             }
+        }
         // 机器人被踢出群组，清理配置文件
         else if (msg.left_chat_member && msg.left_chat_member.username === ctx.me) {
             delete chatsList[chatId];
             log(`Chat ${chatId}: 已被移除。`);
             return;
         }
+        if (text && isCommand(text)) {
+            await handleCommand(ctx);
+        }
+        else {
+            await judge(ctx);
+        }
     }
-    if (text && isCommand(text)) {
-        await handleCommand(ctx);
-    }
-    else {
-        await judge(ctx);
+    else if (chatType === 'private') {
+        if (text && isCommand(text)) {
+            await handleCommand(ctx);
+        }
+        else ctx.reply(strings.group_only);
     }
 }
 
 async function judge(ctx) {
     const msg = ctx.message;
-    const chatId = msg.chat.id.toString(), chatType = msg.chat.type;
+    const chatId = msg.chat.id.toString();
 
-    if (chatType === 'private')
-        return ctx.reply(strings.group_only);
-
-    else if (isGroup(ctx) && msg.sender_chat) {
-        let senderChat = msg.sender_chat;
+    if (msg.sender_chat) {
+        const senderChat = msg.sender_chat;
         if (senderChat.type === 'channel') {
             if (msg.is_automatic_forward) {
                 if (chatsList[chatId].delLinkChanMsg)
