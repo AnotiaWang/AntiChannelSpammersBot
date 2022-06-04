@@ -34,12 +34,13 @@ export async function initWebhook() {
 }
 
 export function log(text, alert = false) {
-    let time = new Date().toLocaleString('zh-CN', { hour12: false });
-    console.log(time + ': ' + text);
+    const time = new Date().toLocaleString('zh-CN', { hour12: false });
+    const content = `[${time}]: ${text}`;
+    console.log(content);
     if (!existsSync('./log')) {
         mkdirSync('./log');
     }
-    writeFileSync('./log/log.txt', time + ': ' + text + '\n', { flag: 'a' });
+    writeFileSync('./log/log.txt', `${content}\n`, { flag: 'a' });
     if (alert) {
         bot.telegram.sendMessage(admin, text).catch(err => {
             log(`消息发送失败: ${err.message}`);
@@ -48,11 +49,16 @@ export function log(text, alert = false) {
 }
 
 export async function isAdmin(ctx) {
-    const msg = ctx.message || ctx.callbackQuery;
-    const chatId = (msg.chat || msg.message.chat).id;
-    const fromId = msg.from.id;
-    const result = await ctx.telegram.getChatMember(chatId, fromId);
-    return result.status === 'creator' || result.status === 'administrator' || result.user.username === 'GroupAnonymousBot';
+    const update = ctx.message || ctx.callbackQuery;
+    const chatId = (update.chat || update.message.chat).id, fromId = update.from.id;
+    try {
+        const result = await ctx.telegram.getChatMember(chatId, fromId);
+        return result.status === 'creator' || result.status === 'administrator' || result.user.username === 'GroupAnonymousBot';
+    }
+    catch (e) {
+        log(`${chatId}: 获取管理员状态失败：${e.message}`, true);
+        return false;
+    }
 }
 
 export function isGroup(ctx) {

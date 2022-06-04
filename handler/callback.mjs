@@ -50,7 +50,6 @@ export async function handleCallbackQuery(ctx) {
                 isWhitelist = true;
                 break;
             case 'deleteCommand':
-                console.log(chatsList[chatId].delCmd)
                 chatsList[chatId].delCmd = !chatsList[chatId].delCmd;
                 if (chatsList[chatId].delCmd) {
                     ctx.answerCbQuery(strings.deleteCommandHelp, { show_alert: true });
@@ -58,7 +57,7 @@ export async function handleCallbackQuery(ctx) {
                 else {
                     ctx.answerCbQuery(strings.settings_saved);
                 }
-                log(`Chat ${chatId}: 自动清理命令设为 ${chatsList[chatId].delCmd}`);
+                log(`Chat ${chatId}: 自动清理命令 设为 ${chatsList[chatId].delCmd}`);
                 break;
             default:
                 break;
