@@ -6,7 +6,7 @@
   "type": "module",
   "dependencies": {
     "dotenv": "^14.2.0",
-    "telegraf": "^4.8.2"
+    "telegraf": "^4.8.3"
   },
   "scripts": {
     "start": "node index.js"
