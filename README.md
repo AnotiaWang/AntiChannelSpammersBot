@@ -2,9 +2,9 @@
 
 <p align="center">清理群内成员使用频道马甲发送的消息。</p>
 
-<div align="center"> 
-<!-- <img src="https://shields.io/endpoint?url=https://acsbot.anotia.top/stats" alt="统计信息"> -->
+<div align="center">
  <img src="https://img.shields.io/github/stars/AnotiaWang/AntiChannelSpammersBot?color=%2326A5E4&logo=GitHub" alt="项目收藏数">
+<img src="https://shields.io/endpoint?url=https://acs.bot.ataw.top/stats" alt="统计信息">
 </div>
 
 ## 特性
