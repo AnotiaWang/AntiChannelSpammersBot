@@ -1,9 +1,12 @@
+import Data from "./src/util/data.js";
 import 'dotenv/config';
 import { Telegraf } from "telegraf";
+import { telegrafThrottler } from "telegraf-throttler";
 import { initWebhook, log } from "./src/util/misc.js";
 import { handleMessage } from "./src/handler/message.js";
 import { handleCallbackQuery } from "./src/handler/callback.js";
-import Data from "./src/util/data.js";
+
+const throttler = telegrafThrottler();
 
 const { token, admin, webhookUrl, webhookPort } = process.env;
 const bot = new Telegraf(token);
@@ -19,6 +22,7 @@ Data.load();
 bot.on('message', (ctx) => handleMessage(ctx));
 bot.on('callback_query', (ctx) => handleCallbackQuery(ctx));
 bot.catch((err) => log(err.stack, true));
+bot.use(throttler);
 const botName = (await bot.telegram.getMe()).username;
 await bot.launch();
 log(`${botName} 启动完成`);
