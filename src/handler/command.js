@@ -7,16 +7,21 @@ import Analytics from "../util/analytics.js";
 
 export async function handleCommand(ctx) {
     const chatId = ctx.chat.id, fromId = ctx.from.id, chatType = new ChatType(ctx);
-    const text = ctx.message.text || ctx.message.caption;
+    const msg = ctx.message, text = msg.text || msg.caption;
     let [command] = text.split(' ');
     let mention = command.split('@')[1];
 
     command = command.split('@')[0].slice(1);
 
     if (chatType.isGroup()) {
-        if (chatsList[chatId].delCmd) {
-            deleteMessage(ctx.message, false, 10000).catch(() => null);
+        if (chatsList[chatId].del) {
+            deleteMessage(msg, false).catch(() => null);
+            return;
         }
+        else if (chatsList[chatId].delCmd) {
+            deleteMessage(msg, false, 10000).catch(() => null);
+        }
+        // 如果消息文本中包含 @，且不是 @ 自己，则不理会
         if (mention && mention !== ctx.me) return;
         if (typeof GeneralCommands[command] === 'function') {
             await GeneralCommands[command](ctx);
@@ -26,7 +31,7 @@ export async function handleCommand(ctx) {
                 GroupCommands[command](ctx);
             }
             else {
-                const cb = await ctx.replyWithHTML(strings.operator_not_admin.replace('{id}', ctx.message.from.id));
+                const cb = await ctx.replyWithHTML(strings.operator_not_admin.replace('{id}', msg.from.id));
                 await deleteMessage(cb, false, 15000);
             }
         }
@@ -59,12 +64,12 @@ class GroupCommands {
             return;
         if (chatsList[chatId].whitelist[targetChatId[0]]) {
             cb = await ctx.reply(strings.x_already_in_whitelist)
-                .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                          .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
         }
         else {
             chatsList[chatId].whitelist[targetChatId[0]] = targetChatId[1];
             cb = await ctx.reply(strings.x_added_to_whitelist.replace('{id}', targetChatId[0]).replace('{x}', targetChatId[1]))
-                .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                          .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
         }
         log(`Chat ${chatId}: 白名单添加 ${targetChatId[0]}`);
         await deleteMessage(cb, false, 15000);
@@ -78,11 +83,11 @@ class GroupCommands {
         if (chatsList[chatId].whitelist[targetChatId[0]]) {
             delete chatsList[chatId].whitelist[targetChatId[0]];
             cb = await ctx.reply(strings.x_removed_from_whitelist.replace('{id}', targetChatId[0]).replace('{x}', targetChatId[1]))
-                .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                          .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
         }
         else {
             cb = await ctx.reply(strings.x_not_in_whitelist)
-                .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                          .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
         }
         log(`Chat ${chatId}: 白名单删除 ${targetChatId[0]}`);
         await deleteMessage(cb, false, 15000);
@@ -99,7 +104,7 @@ class GroupCommands {
         }
         catch (e) {
             cb = await ctx.reply(strings.permission_error.replace('{x}', strings.ban_sender_chat))
-                .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                          .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
         }
         log(`Chat ${chatId}: 封禁了 ${targetChatId[0]}`);
         await deleteMessage(cb, false, 15000);
@@ -116,7 +121,7 @@ class GroupCommands {
         }
         catch (e) {
             cb = await ctx.reply(strings.permission_error.replace('{x}', strings.unban_sender_chat))
-                .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
+                          .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
         }
         log(`Chat ${chatId}: 解封了 ${targetChatId[0]}`);
         await deleteMessage(cb, false, 15000);
@@ -137,7 +142,10 @@ export class GeneralCommands {
             if (new ChatType(ctx).isPrivate())
                 await ctx.replyWithHTML(strings.welcome_private, {
                     reply_markup: {
-                        inline_keyboard: [[{ text: strings.add_to_group, url: `https://t.me/${ctx.me}?startgroup=start` }]]
+                        inline_keyboard: [[{
+                            text: strings.add_to_group,
+                            url: `https://t.me/${ctx.me}?startgroup=start`
+                        }]]
                     },
                     disable_web_page_preview: true
                 });
@@ -145,7 +153,8 @@ export class GeneralCommands {
                 await ctx.replyWithHTML(strings.welcome_group, { disable_web_page_preview: true });
             await deleteMessage(ctx.message, false);
         }
-        catch (e) { }
+        catch (e) {
+        }
     }
 
     static async help(ctx) {
@@ -162,7 +171,8 @@ export class GeneralCommands {
                 });
             await deleteMessage(ctx.message, false);
         }
-        catch (e) { }
+        catch (e) {
+        }
     }
 }
 
@@ -175,10 +185,10 @@ class OwnerCommands {
             editMsg.message_id,
             undefined,
             strings.stats
-                .replace('{g}', Object.keys(chatsList).length.toString())
-                .replace('{u1}', result[0].toString())
-                .replace('{e}', Analytics.activeGroupsCount().toString())
-                .replace('{u2}', result[1].toString())
+                   .replace('{g}', Object.keys(chatsList).length.toString())
+                   .replace('{u1}', result[0].toString())
+                   .replace('{e}', Analytics.activeGroupsCount().toString())
+                   .replace('{u2}', result[1].toString())
         );
         log(`Analytics: 统计完成`);
     }
