@@ -30,9 +30,7 @@ export async function handleMessage(ctx) {
         if (text && isCommand(text)) {
             await handleCommand(ctx);
         }
-        else {
-            await judge(ctx);
-        }
+        await judge(ctx);
     }
     else if (chatType === 'private') {
         if (text && isCommand(text)) {

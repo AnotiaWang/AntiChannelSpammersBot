@@ -14,11 +14,7 @@ export async function handleCommand(ctx) {
     command = command.split('@')[0].slice(1);
 
     if (chatType.isGroup()) {
-        if (chatsList[chatId].del) {
-            deleteMessage(msg, false).catch(() => null);
-            return;
-        }
-        else if (chatsList[chatId].delCmd) {
+        if (chatsList[chatId].delCmd) {
             deleteMessage(msg, false, 10000).catch(() => null);
         }
         // 如果消息文本中包含 @，且不是 @ 自己，则不理会
