@@ -25,9 +25,13 @@
 
 ### 1. 部署至 Heroku
 
+> Heroku 将于 2022/11/28 [下线](https://blog.heroku.com/next-chapter)其免费计划，请自寻其它方式部署。
+
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/AnotiaWang/AntiChannelSpammersBot)
 
 ### 2. 手动部署
+
+请先安装 Node.js 和 NPM 。
 
 1. Clone 本仓库
 
