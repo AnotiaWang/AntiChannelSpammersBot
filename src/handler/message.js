@@ -1,4 +1,4 @@
-import { ChatType, isCommand, log } from "../util/misc.js";
+import { ChatType, hasCommand, log } from "../util/misc.js";
 import Data, { chatsList } from "../util/data.js";
 import { handleCommand } from "./command.js";
 import strings from "../strings/index.js";
@@ -27,13 +27,13 @@ export async function handleMessage(ctx) {
             log(`Chat ${chatId}: 已被移除。`);
             return;
         }
-        if (text && isCommand(text)) {
+        if (text && hasCommand(ctx)) {
             await handleCommand(ctx);
         }
         await judge(ctx);
     }
     else if (chatType === 'private') {
-        if (text && isCommand(text)) {
+        if (text && hasCommand(ctx)) {
             await handleCommand(ctx);
         }
         else ctx.reply(strings.group_only);

@@ -77,8 +77,14 @@ class ChatType {
     }
 }
 
-function isCommand(text) {
-    return text.startsWith('/');
+function hasCommand(ctx) {
+    if (ctx.message.text && ctx.message.text.startsWith('/')) {
+        if (Array.isArray(ctx.message.entities) && ctx.message.entities.length) {
+            if (ctx.message.entities[0].offset === 0 && ctx.message.entities[0].type === 'code') return false;
+        }
+        return true;
+    }
+    return false;
 }
 
 function generateKeyboard(chatId, isWhitelist) {
@@ -109,4 +115,4 @@ setInterval(() => {
     Data.backup();
 }, 1000 * 3600);
 
-export { ChatType, log, isCommand, generateKeyboard, isAdmin, initWebhook };
+export { ChatType, log, hasCommand, generateKeyboard, isAdmin, initWebhook };
