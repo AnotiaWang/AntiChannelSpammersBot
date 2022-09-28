@@ -1,6 +1,6 @@
 import { admin, bot, webhookPort, webhookUrl } from "../../index.js";
 import { createServer } from 'http';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import Data, { chatsList } from "./data.js";
 import strings from "../strings/index.js";
 import Analytics from "./analytics.js";
@@ -8,10 +8,10 @@ import Analytics from "./analytics.js";
 async function initWebhook() {
     const webhookPath = new URL(webhookUrl).pathname;
     await bot.telegram.setWebhook(webhookUrl)
-        .then(() => {
-            log('Webhook 设置成功');
-        })
-        .catch((e) => log(`Webhook 设置失败: ${e.message}`));
+             .then(() => {
+                 log('Webhook 设置成功');
+             })
+             .catch((e) => log(`Webhook 设置失败: ${e.message}`));
     createServer((req, res) => {
         if (req.url === '/stats') {
             res.writeHead(200, { 'Content-Type': 'text/html, charset=utf-8' });
@@ -24,18 +24,20 @@ async function initWebhook() {
                 "style": "flat"
             }));
             res.end();
-        } else if (req.url === webhookPath) {
+        }
+        else if (req.url === webhookPath) {
             bot.handleUpdate(req.body, res).catch(err => {
                 log(`Update 处理失败: 消息：${req.body}，错误信息：${err.stack}`);
             });
-        } else {
+        }
+        else {
             res.statusCode = 404;
             res.end('Not found');
         }
     }).listen(process.env.PORT || webhookPort || 8888);
 }
 
-function log(text, alert = false) {
+function log(text, alert = false, msgContext = null) {
     const time = new Date().toLocaleString('zh-CN', { hour12: false });
     const content = `[${time}]: ${text}`;
     console.log(content);
@@ -47,6 +49,18 @@ function log(text, alert = false) {
         bot.telegram.sendMessage(admin, text).catch(err => {
             log(`消息发送失败: ${err.message}`);
         });
+        if (typeof msgContext === 'object') {
+            const str = JSON.stringify(msgContext, null, 2);
+            if (str.length > 4096) {
+                const filePath = `./logs/err_${Date.now()}.json`;
+                writeFileSync(filePath, str);
+                bot.telegram.sendDocument(admin, filePath, {
+                    caption: text
+                }).catch();
+                rmSync(filePath);
+            }
+            else bot.telegram.sendMessage(admin, str).catch();
+        }
     }
 }
 
@@ -100,12 +114,21 @@ function generateKeyboard(chatId, isWhitelist) {
     else {
         keyboard = [
             [{ text: `${strings.deleteChannelSenderMsg} ${data.del ? '✅' : '❌'}`, callback_data: 'switch' }],
-            [{ text: `${strings.deleteAnonymousAdminMsg} ${data.delAnonMsg ? '✅' : '❌'}`, callback_data: 'deleteAnonymousMessage' }],
-            [{ text: `${strings.deleteLinkedChannelMsg} ${data.delLinkChanMsg ? '✅' : '❌'}`, callback_data: 'deleteChannelMessage' }],
-            [{ text: `${strings.unpinChannelMsg} ${data.unpinChanMsg ? '✅' : '❌'}`, callback_data: 'unpinChannelMessage' }],
+            [{
+                text: `${strings.deleteAnonymousAdminMsg} ${data.delAnonMsg ? '✅' : '❌'}`,
+                callback_data: 'deleteAnonymousMessage'
+            }],
+            [{
+                text: `${strings.deleteLinkedChannelMsg} ${data.delLinkChanMsg ? '✅' : '❌'}`,
+                callback_data: 'deleteChannelMessage'
+            }],
+            [{
+                text: `${strings.unpinChannelMsg} ${data.unpinChanMsg ? '✅' : '❌'}`,
+                callback_data: 'unpinChannelMessage'
+            }],
             [{ text: `${strings.deleteCommand} ${data.delCmd ? '✅' : '❌'}`, callback_data: 'deleteCommand' }],
             [{ text: strings.channelWhitelist, callback_data: 'whitelist' }],
-            [{ text: strings.deleteMsg, callback_data: 'deleteMsg' }],
+            [{ text: strings.deleteMsg, callback_data: 'deleteMsg' }]
         ];
     }
     return keyboard;

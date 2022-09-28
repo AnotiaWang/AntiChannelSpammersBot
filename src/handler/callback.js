@@ -2,7 +2,6 @@ import { generateKeyboard, isAdmin, log } from "../util/misc.js";
 import Data, { chatsList } from "../util/data.js";
 import strings from "../strings/index.js";
 
-
 export async function handleCallbackQuery(ctx) {
     const query = ctx.callbackQuery;
     const chatId = query.message.chat.id;
