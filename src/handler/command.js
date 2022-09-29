@@ -13,6 +13,8 @@ export async function handleCommand(ctx) {
 
     command = command.split('@')[0].slice(1);
 
+    if (command.includes('constructor') || command.includes('prototype')) return;
+
     if (chatType.isGroup()) {
         if (chatsList[chatId].delCmd) {
             deleteMessage(msg, false, 10000).catch(() => null);
@@ -170,6 +172,8 @@ export class GeneralCommands {
         catch (e) {
         }
     }
+
+    static async apply() {}
 }
 
 class OwnerCommands {
