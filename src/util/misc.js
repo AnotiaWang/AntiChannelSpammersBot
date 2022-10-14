@@ -1,9 +1,9 @@
-import { admin, bot, webhookPort, webhookUrl } from "../../index.js";
+import { admin, bot, webhookPort, webhookUrl } from '../../index.js';
 import { createServer } from 'http';
 import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs';
-import Data, { chatsList } from "./data.js";
-import strings from "../strings/index.js";
-import Analytics from "./analytics.js";
+import Data, { chatsList } from './data.js';
+import strings from '../strings/index.js';
+import Analytics from './analytics.js';
 
 async function initWebhook() {
     const webhookPath = new URL(webhookUrl).pathname;
@@ -16,12 +16,12 @@ async function initWebhook() {
         if (req.url === '/stats') {
             res.writeHead(200, { 'Content-Type': 'text/html, charset=utf-8' });
             res.write(JSON.stringify({
-                "schemaVersion": 1,
-                "label": "使用中群组",
-                "message": Analytics.activeGroupsCount().toString() + ' 个',
-                "color": "#26A5E4",
-                "namedLogo": "Telegram",
-                "style": "flat"
+                'schemaVersion': 1,
+                'label': '使用中群组',
+                'message': Analytics.activeGroupsCount().toString() + ' 个',
+                'color': '#26A5E4',
+                'namedLogo': 'Telegram',
+                'style': 'flat'
             }));
             res.end();
         }

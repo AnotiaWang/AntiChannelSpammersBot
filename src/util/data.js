@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { log } from "./misc.js";
-import { admin, bot } from "../../index.js";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { log } from './misc.js';
+import { admin, bot } from '../../index.js';
 
 const template = {
     del: false,
@@ -9,7 +9,7 @@ const template = {
     delLinkChanMsg: false,
     unpinChanMsg: false,
     whitelist: {}
-}
+};
 
 let chatsList = {};
 
@@ -59,7 +59,7 @@ function deepClone(obj) {
     let copy;
 
     // Handle the 3 simple types, and null or undefined
-    if (null == obj || "object" != typeof obj) return obj;
+    if (null == obj || 'object' != typeof obj) return obj;
 
     // Handle Date
     if (obj instanceof Date) {
@@ -81,7 +81,7 @@ function deepClone(obj) {
     if (obj instanceof Function) {
         copy = function () {
             return obj.apply(this, arguments);
-        }
+        };
         return copy;
     }
 
@@ -94,8 +94,8 @@ function deepClone(obj) {
         return copy;
     }
 
-    throw new Error("Unable to copy obj as type isn't supported " + obj.constructor.name);
+    throw new Error('Unable to copy obj as type isn\'t supported ' + obj.constructor.name);
 }
 
 export default Data;
-export { template, chatsList }
+export { template, chatsList };

@@ -1,6 +1,6 @@
-import { generateKeyboard, isAdmin, log } from "../util/misc.js";
-import Data, { chatsList } from "../util/data.js";
-import strings from "../strings/index.js";
+import { generateKeyboard, isAdmin, log } from '../util/misc.js';
+import Data, { chatsList } from '../util/data.js';
+import strings from '../strings/index.js';
 
 export async function handleCallbackQuery(ctx) {
     const query = ctx.callbackQuery;
@@ -66,7 +66,7 @@ export async function handleCallbackQuery(ctx) {
         // 删除白名单中的频道
         if (query.data.startsWith('demote')) {
             let demoteChatId = query.data.split('_')[1];
-            ctx.answerCbQuery(strings.x_removed_from_whitelist.replace('{x}', chatsList[chatId].whitelist[demoteChatId]).replace('{id}', demoteChatId));
+            ctx.answerCbQuery(strings.x_removed_from_whitelist(chatsList[chatId].whitelist[demoteChatId], demoteChatId));
             text = strings.whitelist_help;
             delete chatsList[chatId].whitelist[demoteChatId];
             log(`Chat ${chatId}: 白名单中的频道 ${demoteChatId} 被移除`);

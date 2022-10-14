@@ -1,6 +1,6 @@
-import Data, { chatsList } from "./data.js";
-import { bot } from "../../index.js";
-import { log } from "./misc.js";
+import Data, { chatsList } from './data.js';
+import { bot } from '../../index.js';
+import { log } from './misc.js';
 
 class Analytics {
     static activeGroupsCount() {

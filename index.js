@@ -1,10 +1,10 @@
-import Data from "./src/util/data.js";
+import Data from './src/util/data.js';
 import 'dotenv/config';
-import { Telegraf } from "telegraf";
-import { telegrafThrottler } from "telegraf-throttler";
-import { initWebhook, log } from "./src/util/misc.js";
-import { handleMessage } from "./src/handler/message.js";
-import { handleCallbackQuery } from "./src/handler/callback.js";
+import { Telegraf } from 'telegraf';
+import { telegrafThrottler } from 'telegraf-throttler';
+import { initWebhook, log } from './src/util/misc.js';
+import { handleMessage } from './src/handler/message.js';
+import { handleCallbackQuery } from './src/handler/callback.js';
 
 const throttler = telegrafThrottler();
 

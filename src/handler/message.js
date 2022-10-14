@@ -17,7 +17,7 @@ export async function handleMessage(ctx) {
                     if (!chatsList[chatId])
                         chatsList[chatId] = {};
                     log(`Chat ${chatId}: 被加入群组`);
-                    await ctx.replyWithHTML(strings.welcome_group).catch(e => log(`Chat ${chatId}: 发送欢迎消息失败：${e.message}`));
+                    await ctx.reply(strings.welcome_group).catch(e => log(`Chat ${chatId}: 发送欢迎消息失败：${e.message}`));
                 }
             }
         }
@@ -89,9 +89,7 @@ export async function deleteMessage(msg, alertOnFailure = true, delay = 0) {
             if (e.message.includes("not enough rights")) {
                 const delMsg = await bot.telegram.sendMessage(
                     chatId,
-                    strings.deleteMsgFailure
-                        .replace('{id}', msgId)
-                        .replace('{err}', e.message)
+                    strings.deleteMsgFailure(msgId, e.message)
                 ).catch(() => null);
                 if (delMsg) {
                     await deleteMessage(delMsg, false, 15000);
@@ -116,7 +114,7 @@ export async function getQueryChatId(ctx) {
     } else {
         queryChatId = msg.text.split(' ')[1];
         if (!queryChatId) {
-            cb = await ctx.replyWithHTML(strings.command_usage_error);
+            cb = await ctx.reply(strings.command_usage_error);
             await deleteMessage(cb, false, 15000);
             return null;
         }
@@ -130,7 +128,7 @@ export async function getQueryChatId(ctx) {
             return null;
         }
     } catch (e) {
-        cb = await ctx.reply(strings.get_channel_error.replace('{code}', e.message));
+        cb = await ctx.reply(strings.get_channel_error(e.message));
         await deleteMessage(cb, false, 15000);
     }
 }
