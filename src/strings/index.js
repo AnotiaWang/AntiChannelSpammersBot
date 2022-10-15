@@ -2,7 +2,12 @@ import { fmt, bold, link, code } from 'telegraf/format';
 
 const strings = {
     analyzing: '正在统计...',
-    stats: fmt`${bold('🎉 统计信息')}\n加入的群组：{g} 个\n成员数：{u1} 人\n启用的群组：{e} 个\n成员数：{u2} 人`,
+    stats: ({
+        joinedGroups,
+        joinedMembers,
+        enabledGroups,
+        enabledMembers
+    }) => fmt`${bold('🎉 统计信息')}\n加入的群组：${joinedGroups} 个\n成员数：${joinedMembers} 人\n启用的群组：${enabledGroups} 个\n成员数：${enabledMembers} 人`,
     welcome_private: fmt`${bold('欢迎使用 🎉')}欢迎使用\n\n我可以：\n- 删除群成员以频道身份发送的消息\n- 删除匿名群管理的消息\n- 删除来自关联频道的消息\n- 解除频道消息在群内的置顶\n\n点击下面的按钮，将我添加至群组。\n\n源代码：${link('GitHub', 'https://github.com/AnotiaWang/AntiChannelSpammersBot')}`,
     welcome_group: '欢迎使用！您可以发送 /on 或 /off 一键开启/关闭反马甲。发送 /config 进行详细的设置，更多用法详见 /help。',
     add_to_group: '点此将我添加到群组',

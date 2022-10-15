@@ -185,11 +185,14 @@ class OwnerCommands {
         await ctx.telegram.editMessageText(editMsg.chat.id,
             editMsg.message_id,
             undefined,
-            strings.stats
-                   .replace('{g}', Object.keys(chatsList).length.toString())
-                   .replace('{u1}', result[0].toString())
-                   .replace('{e}', Analytics.activeGroupsCount().toString())
-                   .replace('{u2}', result[1].toString())
+            strings.stats(
+                {
+                    joinedGroups: Object.keys(chatsList).length.toString(),
+                    joinedMembers: result[0].toString(),
+                    enabledGroups: Analytics.activeGroupsCount().toString(),
+                    enabledMembers: result[1].toString()
+                }
+            )
         );
         log(`Analytics: 统计完成`);
     }

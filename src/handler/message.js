@@ -54,7 +54,7 @@ async function judge(ctx) {
                     await ctx.telegram.unpinChatMessage(chatId, msg.message_id).catch(err => {
                         log(`Chat ${chatId}: 取消置顶 (ID ${msg.message_id}) 失败：${err.message}`);
                         if (err.message.includes('not enough rights')) {
-                            ctx.reply(strings.permission_error.replace('{x}', strings.unpin_message))
+                            ctx.reply(strings.permission_error(strings.unpin_message))
                                 .catch((e) => log(`${ctx.message.chat.id}: 发送消息失败：${e.message}`));
                         }
                     });
