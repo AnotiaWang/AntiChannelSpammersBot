@@ -1,41 +1,7 @@
-import { admin, bot, webhookPort, webhookUrl } from '../../index.js';
-import { createServer } from 'http';
+import { admin, bot } from '../../index.js';
 import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import Data, { chatsList } from './data.js';
 import strings from '../strings/index.js';
-import Analytics from './analytics.js';
-
-async function initWebhook() {
-    const webhookPath = new URL(webhookUrl).pathname;
-    await bot.telegram.setWebhook(webhookUrl)
-             .then(() => {
-                 log('Webhook 设置成功');
-             })
-             .catch((e) => log(`Webhook 设置失败: ${e.message}`));
-    createServer((req, res) => {
-        if (req.url === '/stats') {
-            res.writeHead(200, { 'Content-Type': 'text/html, charset=utf-8' });
-            res.write(JSON.stringify({
-                'schemaVersion': 1,
-                'label': '使用中群组',
-                'message': Analytics.activeGroupsCount().toString() + ' 个',
-                'color': '#26A5E4',
-                'namedLogo': 'Telegram',
-                'style': 'flat'
-            }));
-            res.end();
-        }
-        else if (req.url === webhookPath) {
-            bot.handleUpdate(req.body, res).catch(err => {
-                log(`Update 处理失败: 消息：${req.body}，错误信息：${err.stack}`);
-            });
-        }
-        else {
-            res.statusCode = 404;
-            res.end('Not found');
-        }
-    }).listen(process.env.PORT || webhookPort || 8888);
-}
 
 function log(text, alert = false, msgContext = null) {
     const time = new Date().toLocaleString('zh-CN', { hour12: false });
@@ -138,4 +104,4 @@ setInterval(() => {
     Data.backup();
 }, 1000 * 3600);
 
-export { ChatType, log, hasCommand, generateKeyboard, isAdmin, initWebhook };
+export { ChatType, log, hasCommand, generateKeyboard, isAdmin };
