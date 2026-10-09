@@ -24,7 +24,7 @@
 
 本项目运行在 [Telegram Serverless](https://core.telegram.org/bots/serverless) 上，无需自备服务器。代码位于 `tgcloud/`，数据存放在平台为每个 bot 提供的 SQLite 数据库中。
 
-1. 安装 Node.js（运行测试需要 22.5 及以上版本），Clone 本仓库并执行 `npm install`。
+1. 安装 Node.js（运行测试需要 22.5 及以上版本），执行 `corepack enable` 启用 `package.json` 中指定版本的 pnpm。Clone 本仓库并执行 `pnpm install`。
 
 2. 编辑 `tgcloud/lib/config.js`，将 `ADMIN_ID` 设为你的 UID（可使用 @GetIDsBot 获取）。所有者会收到错误报告，并可使用下方的所有者命令。
 
@@ -33,18 +33,18 @@
 4. 初始化并关联 bot（`init` 只会补充缺失的文件，不会覆盖已有文件）：
 
    ```bash
-   npx tgcloud init
-   npx tgcloud login   # 输入 BotFather → Serverless → CLI Access 中的 CLI access token
+   pnpm exec tgcloud init
+   pnpm exec tgcloud login   # 输入 BotFather → Serverless → CLI Access 中的 CLI access token
    ```
 
 5. 部署代码并建表：
 
    ```bash
-   npm run deploy      # tgcloud push，同时会将 webhook 指向平台
-   npm run migrate     # tgcloud migrate，创建数据库表
+   pnpm run deploy     # tgcloud push，同时会将 webhook 指向平台
+   pnpm run migrate    # tgcloud migrate，创建数据库表
    ```
 
-6. 执行 `npx tgcloud webhook` 确认 webhook 处于 In sync 状态；如不是，执行 `npx tgcloud webhook sync`。
+6. 执行 `pnpm exec tgcloud webhook` 确认 webhook 处于 In sync 状态；如不是，执行 `pnpm exec tgcloud webhook sync`。
 
 ## 所有者命令
 
@@ -61,7 +61,7 @@
 
 1. **先在私聊中给旧版 bot 发送 `/save`。** 旧版中通过 `/on`、`/off`、`/promote`、`/demote` 修改的设置只保存在内存中，不发送 `/save` 就会丢失。
 2. 停止旧版进程，取出 `data/chatsList.json`（或发送 `/backup` 让旧版 bot 把文件发给你）。
-3. 按上文「部署」完成第 1～6 步。`npm run deploy` 之后 bot 即由 Serverless 接管。
+3. 按上文「部署」完成第 1～6 步。`pnpm run deploy` 之后 bot 即由 Serverless 接管。
 4. 私聊新 bot，发送 `chatsList.json` 并附上说明文字 `/import`。
 5. 发送 `/stats`，核对群组数量。
 
@@ -79,7 +79,9 @@
 
 ## 开发
 
-`npm test` 使用 `test/fake-sdk` 模拟平台的 `sdk` 模块（数据库由 Node.js 内置的 SQLite 提供），在本地运行测试。
+`pnpm test` 使用 `test/fake-sdk` 模拟平台的 `sdk` 模块（数据库由 Node.js 内置的 SQLite 提供），在本地运行测试。
+
+注意 `deploy` 与 pnpm 的内置命令同名，需写成 `pnpm run deploy`，不能简写为 `pnpm deploy`。
 
 测试只能覆盖代码逻辑。平台本身的行为（执行时长上限等）需要部署后实际验证。
 
