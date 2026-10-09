@@ -4,7 +4,6 @@
 
 <div align="center">
  <img src="https://img.shields.io/github/stars/AnotiaWang/AntiChannelSpammersBot?color=%2326A5E4&logo=GitHub" alt="项目收藏数">
-<img src="https://shields.io/endpoint?url=https://acs.bot.ataw.top/stats" alt="统计信息">
 </div>
 
 ## 特性
@@ -21,39 +20,68 @@
 
 - [x] 支持封禁 / 解封频道马甲
 
-## 使用方法
+## 部署
 
-### 1. 部署至 Heroku
+本项目运行在 [Telegram Serverless](https://core.telegram.org/bots/serverless) 上，无需自备服务器。代码位于 `tgcloud/`，数据存放在平台为每个 bot 提供的 SQLite 数据库中。
 
-> Heroku 将于 2022/11/28 [下线](https://blog.heroku.com/next-chapter)其免费计划，请自寻其它方式部署。
+1. 安装 Node.js（运行测试需要 22.5 及以上版本），Clone 本仓库并执行 `npm install`。
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/AnotiaWang/AntiChannelSpammersBot)
+2. 编辑 `tgcloud/lib/config.js`，将 `ADMIN_ID` 设为你的 UID（可使用 @GetIDsBot 获取）。所有者会收到错误报告，并可使用下方的所有者命令。
 
-### 2. 手动部署
+3. 在 @BotFather 中打开你的 bot → Serverless，开启 Serverless。
 
-请先安装 Node.js 和 NPM 。
-
-1. Clone 本仓库
-
-2. 复制 `.env.example` 并重命名为 `.env`
-
-3. 编辑 `.env`：
-
-    - `token` : 从 BotFather 拿到的 token
-
-    - `admin` : 你的 UID (Unique Identifier，可使用第三方客户端或 @GetIDsBot 获取)，如果不需要统计功能，可以不配置
-
-    - `webhookUrl` : WebHook 地址。填写完整 URL，**行尾须包含 `/`**（ 如 `https://bot.blabla.com:443/bot` ）。如不使用则留空。
-
-    - `webhookPort`: HTTP 服务器监听的反代端口，如不使用则留空
-
-   > 如使用 WebHook ，支持生成[统计 badge](https://shields.io)，默认的数据接口在 `[域名]/stats` ，样式见代码。图片地址使用 `https://shields.io/endpoint?url=[域名]/stats` 即可。
-
-4. 运行：
+4. 初始化并关联 bot（`init` 只会补充缺失的文件，不会覆盖已有文件）：
 
    ```bash
-   npm install && npm start
+   npx tgcloud init
+   npx tgcloud login   # 输入 BotFather → Serverless → CLI Access 中的 CLI access token
    ```
+
+5. 部署代码并建表：
+
+   ```bash
+   npm run deploy      # tgcloud push，同时会将 webhook 指向平台
+   npm run migrate     # tgcloud migrate，创建数据库表
+   ```
+
+6. 执行 `npx tgcloud webhook` 确认 webhook 处于 In sync 状态；如不是，执行 `npx tgcloud webhook sync`。
+
+## 所有者命令
+
+在私聊中由 `ADMIN_ID` 对应的用户使用：
+
+- `/stats`：群组数量等统计。
+- `/stats members`：统计成员数。群组较多时一次调用可能统计不完，会保存进度，再次发送即可继续；`/stats reset` 重新开始。
+- `/backup`：导出全部数据为 `chatsList.json`，格式与旧版相同。
+- `/import`：发送 `chatsList.json` 文件并附上说明文字 `/import`，或回复该文件发送 `/import`。文件中的群组设置和白名单会覆盖数据库中的对应内容，其他群组不受影响。
+
+## 从旧版（自建服务器）迁移
+
+旧版数据保存在服务器的 `data/chatsList.json` 中，可以直接导入。
+
+1. **先在私聊中给旧版 bot 发送 `/save`。** 旧版中通过 `/on`、`/off`、`/promote`、`/demote` 修改的设置只保存在内存中，不发送 `/save` 就会丢失。
+2. 停止旧版进程，取出 `data/chatsList.json`（或发送 `/backup` 让旧版 bot 把文件发给你）。
+3. 按上文「部署」完成第 1～6 步。`npm run deploy` 之后 bot 即由 Serverless 接管。
+4. 私聊新 bot，发送 `chatsList.json` 并附上说明文字 `/import`。
+5. 发送 `/stats`，核对群组数量。
+
+从停止旧版到完成导入的这段时间内，bot 会按默认设置（全部关闭）运行，不会删除消息。
+
+如需回滚：在新 bot 上发送 `/backup` 取得最新数据，放到旧版的 `data/chatsList.json`，在 BotFather 中关闭 Serverless 后启动旧版。
+
+## 与旧版的差异
+
+- 平台没有定时器。延迟删除的消息（自动清理的命令、15 秒后删除的提示）会记录到数据库，在之后有新的更新到达时删除，因此在不活跃的群组中可能会晚于预定时间删除。
+- 不再每小时自动备份，改为由所有者发送 `/backup`。
+- 设置修改立即写入数据库，不再需要 `/save`；`/exit` 已移除。
+- 平台不提供公开的 HTTP 接口，统计 badge（`/stats` 接口）已移除。
+- 非管理员点击设置按钮时会收到提示。
+
+## 开发
+
+`npm test` 使用 `test/fake-sdk` 模拟平台的 `sdk` 模块（数据库由 Node.js 内置的 SQLite 提供），在本地运行测试。
+
+测试只能覆盖代码逻辑。平台本身的行为（执行时长上限等）需要部署后实际验证。
 
 ## Demo: [@AntiChannelSpammersBot](https://t.me/AntiChannelSpammersBot)
 
