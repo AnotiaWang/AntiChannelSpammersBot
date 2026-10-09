@@ -21,6 +21,12 @@ const strings = {
         `发送 ${code('/stats members')} 统计成员数。`,
     stats_members_progress: (processed, total) =>
         `统计中 ${(total ? processed / total * 100 : 100).toFixed(2)}% (${processed} / ${total}) ...`,
+    stats_members_paused: (processed, total, rateLimited) =>
+        `已统计 ${(total ? processed / total * 100 : 100).toFixed(2)}% (${processed} / ${total})。\n` +
+        (rateLimited ? `被 Telegram 限流，请在 ${rateLimited} 秒后点击下方按钮继续。` : '单次运行时间已用完，点击下方按钮继续。'),
+    stats_members_continue: '▶️ 继续统计',
+    stats_members_none: '没有进行中的统计',
+    stats_members_running: '统计正在进行中',
     stats_members: ({ total, joinedMembers, enabledMembers, removed, skipped }) =>
         `${b('🎉 成员统计')}\n统计群组：${total} 个\n成员数：${joinedMembers} 人\n` +
         `启用删除马甲消息的群组成员数：${enabledMembers} 人\n已清除失效群组：${removed} 个` +

@@ -265,18 +265,21 @@ test('/import 文件格式错误时报告', async () => {
     assert.match(sentTexts().at(-1), /导入失败/);
 });
 
-test('/stats 与 /stats members：在同一条消息中更新进度', async (t) => {
+const pressContinue = (from = OWNER) => onCallbackQuery({
+    id: String(nextId++), from, data: 'stats_continue',
+    message: { message_id: 1, chat: { id: from.id, type: 'private' }, date: 0 }
+});
+const statsEdits = () => callsOf('editMessageText');
+const hasContinueButton = (p) => p.reply_markup?.inline_keyboard?.[0]?.[0]?.callback_data === 'stats_continue';
+
+test('/stats 与 /stats members：一次完成，限流后重试，清除失效群组', async () => {
     for (const id of [-11, -12, -13, -14, -15]) await ensureChat(id);
     await setSetting(-12, 'del', true);
     await onMessage(privateMsg(OWNER, command('/stats')));
     assert.match(sentTexts().at(-1), /加入的群组：5 个\n启用的群组：1 个/);
 
-    // 每次查询耗时 2 秒，使进度每隔一次查询更新一次
-    let now = 0;
-    t.mock.method(Date, 'now', () => now);
     let limited = true;
     handlers.getChatMemberCount = ({ chat_id }) => {
-        now += 2_000;
         if (chat_id === -13) throw new BotApiError(403, 'Forbidden: bot was kicked from the supergroup chat');
         if (chat_id === -15) throw new BotApiError(400, 'Bad Request: something else');
         if (chat_id === -14 && limited) {
@@ -285,18 +288,90 @@ test('/stats 与 /stats members：在同一条消息中更新进度', async (t) 
         }
         return 10;
     };
+    await onMessage(privateMsg(OWNER, command('/stats members')));
+    const edits = statsEdits();
+    assert.ok(edits.every((p) => p.message_id === edits[0].message_id));
+    assert.match(edits.at(-1).text, /统计群组：5 个\n成员数：30 人\n启用删除马甲消息的群组成员数：10 人\n已清除失效群组：1 个\n获取失败：1 个/);
+    assert.ok(!hasContinueButton(edits.at(-1)));
+    assert.equal(await getChat(-13), null);
+    assert.equal(await db.get("SELECT * FROM kv WHERE key = 'stats_members'"), null);
+});
+
+test('/stats members：超出时间预算时暂停，点击按钮在同一条消息中继续', async (t) => {
+    for (let i = 1; i <= 30; i++) await ensureChat(-i);
+    let now = 0;
+    t.mock.method(Date, 'now', () => now);
+    // 每次查询耗时 1 秒；每批并发 5 个，一批共计 5 秒
+    handlers.getChatMemberCount = () => {
+        now += 1_000;
+        return 10;
+    };
+
     const sentBefore = callsOf('sendMessage').length;
     await onMessage(privateMsg(OWNER, command('/stats members')));
+    assert.deepEqual(callsOf('sendMessage').slice(sentBefore).map((p) => p.text), ['正在统计...']);
+    const messageId = statsEdits()[0].message_id;
+    let last = statsEdits().at(-1);
+    assert.ok(hasContinueButton(last));
+    assert.match(last.text, /已统计 33\.33% \(10 \/ 30\)。\n单次运行时间已用完/);
+    assert.ok(statsEdits().some((p) => /^统计中 16\.67% \(5 \/ 30\) \.\.\.$/.test(p.text)));
 
-    // 只发出一条“正在统计”消息，其余均为对它的编辑
-    const sent = callsOf('sendMessage').slice(sentBefore);
-    assert.deepEqual(sent.map((p) => p.text), ['正在统计...']);
-    const edits = callsOf('editMessageText');
-    assert.ok(edits.every((p) => p.message_id === edits[0].message_id));
-    assert.ok(edits.slice(0, -1).length >= 2);
-    assert.ok(edits.slice(0, -1).every((p) => /^统计中 \d+\.\d{2}% \(\d \/ 5\) \.\.\.$/.test(p.text)));
-    assert.match(edits.at(-1).text, /统计群组：5 个\n成员数：30 人\n启用删除马甲消息的群组成员数：10 人\n已清除失效群组：1 个\n获取失败：1 个/);
-    assert.equal(await getChat(-13), null);
+    // 非所有者点击无效
+    await pressContinue(USER);
+    assert.equal(statsEdits().at(-1), last);
+
+    await pressContinue();
+    assert.match(statsEdits().at(-1).text, /\(20 \/ 30\)/);
+    // 也可以发送命令继续
+    await onMessage(privateMsg(OWNER, command('/stats members')));
+    last = statsEdits().at(-1);
+    assert.match(last.text, /统计群组：30 个\n成员数：300 人/);
+    assert.ok(statsEdits().every((p) => p.message_id === messageId));
+    assert.equal(callsOf('getChatMemberCount').length, 30);
+
+    await pressContinue();
+    assert.equal(callsOf('answerCallbackQuery').at(-1).text, '没有进行中的统计');
+});
+
+test('/stats members：限流等待超出预算时暂停，继续后不重复计数', async (t) => {
+    for (let i = 1; i <= 7; i++) await ensureChat(-i);
+    let now = 0;
+    t.mock.method(Date, 'now', () => now);
+    let limited = true;
+    handlers.getChatMemberCount = ({ chat_id }) => {
+        if (chat_id === -5 && limited) {
+            limited = false;
+            throw new BotApiError(429, 'Too Many Requests: retry after 30', { retry_after: 30 });
+        }
+        return chat_id === -1 ? 1 : 10;
+    };
+    await onMessage(privateMsg(OWNER, command('/stats members')));
+    const paused = statsEdits().at(-1);
+    assert.ok(hasContinueButton(paused));
+    assert.match(paused.text, /\(4 \/ 7\)。\n被 Telegram 限流，请在 30 秒后/);
+
+    now += 31_000;
+    await pressContinue();
+    assert.match(statsEdits().at(-1).text, /统计群组：7 个\n成员数：61 人/);
+});
+
+test('/stats members：统计进行中时不能重复开始', async (t) => {
+    await ensureChat(-1);
+    let now = 0;
+    t.mock.method(Date, 'now', () => now);
+    let release;
+    handlers.getChatMemberCount = () => new Promise((resolve) => { release = () => resolve(10); });
+
+    const first = onMessage(privateMsg(OWNER, command('/stats members')));
+    while (!release) await new Promise((r) => setImmediate(r));
+    await onMessage(privateMsg(OWNER, command('/stats members')));
+    assert.equal(sentTexts().at(-1), '统计正在进行中');
+    await pressContinue();
+    assert.equal(callsOf('answerCallbackQuery').at(-1).text, '统计正在进行中');
+
+    release();
+    await first;
+    assert.match(statsEdits().at(-1).text, /统计群组：1 个/);
 });
 
 test('UTF-8 编解码的后备实现', () => {

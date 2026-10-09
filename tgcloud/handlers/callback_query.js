@@ -3,6 +3,8 @@ import strings from '../lib/strings.js';
 import { ensureChat, removeFromWhitelist, toggleSetting } from '../lib/store.js';
 import { generateKeyboard } from '../lib/keyboard.js';
 import { alert, errorText, isAdmin, log, sweepDeletions } from '../lib/telegram.js';
+import { ADMIN_ID } from '../lib/config.js';
+import { CONTINUE_CALLBACK, continueMemberStats } from '../lib/stats.js';
 
 export default async function (query) {
     try {
@@ -39,6 +41,17 @@ async function handleCallbackQuery(query) {
         return;
     }
     const chatId = message.chat.id;
+
+    // 所有者私聊中的「继续统计」
+    if (query.data === CONTINUE_CALLBACK) {
+        if (!ADMIN_ID || query.from.id !== ADMIN_ID) {
+            await answer(query);
+            return;
+        }
+        const refused = await continueMemberStats(() => answer(query));
+        if (refused) await answer(query, refused);
+        return;
+    }
 
     if (!(await isAdmin(chatId, query.from))) {
         await answer(query, strings.query_sender_not_admin, true);
