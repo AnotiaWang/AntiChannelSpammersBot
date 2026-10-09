@@ -68,7 +68,15 @@ export function index(name) {
 
 export function table(name, columns, extra) {
     for (const [key, col] of Object.entries(columns)) col.name ??= key;
-    return { tableName: name, columns, extra: extra ? extra(columns) : {} };
+    return {
+        tableName: name,
+        columns,
+        extra: extra ? extra(columns) : {},
+        deprecated() {
+            this.isDeprecated = true;
+            return this;
+        }
+    };
 }
 
 // 按 schema.js 的导出重建内存数据库
@@ -76,7 +84,7 @@ export function resetDatabase(schema) {
     sqlite.close();
     sqlite = new DatabaseSync(':memory:');
     for (const t of Object.values(schema)) {
-        if (!t?.tableName) continue;
+        if (!t?.tableName || t.isDeprecated) continue;
         const defs = Object.values(t.columns).map((c) => [c.name, c.type, ...c.parts].join(' '));
         const indexes = [];
         for (const item of Object.values(t.extra)) {

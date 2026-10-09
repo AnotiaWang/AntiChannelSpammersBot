@@ -16,5 +16,5 @@ export const DELETION_SWEEP_LIMIT = 10;
 // 到期超过此时长仍未删除的记录直接丢弃（超过 48 小时的消息通常已无法删除）
 export const DELETION_MAX_AGE = 48 * 3600 * 1000;
 
-// /stats members 单次调用的时间预算，超出后保存进度，再次发送命令继续
-export const STATS_TIME_BUDGET = 10_000;
+// /stats members 更新进度消息的间隔
+export const STATS_PROGRESS_INTERVAL = 3_000;

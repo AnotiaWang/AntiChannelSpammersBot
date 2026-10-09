@@ -265,29 +265,38 @@ test('/import 文件格式错误时报告', async () => {
     assert.match(sentTexts().at(-1), /导入失败/);
 });
 
-test('/stats 与可续传的 /stats members', async (t) => {
-    for (const id of [-11, -12, -13, -14]) await ensureChat(id);
+test('/stats 与 /stats members：在同一条消息中更新进度', async (t) => {
+    for (const id of [-11, -12, -13, -14, -15]) await ensureChat(id);
     await setSetting(-12, 'del', true);
     await onMessage(privateMsg(OWNER, command('/stats')));
-    assert.match(sentTexts().at(-1), /加入的群组：4 个\n启用的群组：1 个/);
+    assert.match(sentTexts().at(-1), /加入的群组：5 个\n启用的群组：1 个/);
 
+    // 每次查询耗时 2 秒，使进度每隔一次查询更新一次
+    let now = 0;
+    t.mock.method(Date, 'now', () => now);
     let limited = true;
     handlers.getChatMemberCount = ({ chat_id }) => {
+        now += 2_000;
         if (chat_id === -13) throw new BotApiError(403, 'Forbidden: bot was kicked from the supergroup chat');
-        if (chat_id === -11 && limited) {
+        if (chat_id === -15) throw new BotApiError(400, 'Bad Request: something else');
+        if (chat_id === -14 && limited) {
             limited = false;
-            throw new BotApiError(429, 'Too Many Requests: retry after 5', { retry_after: 5 });
+            throw new BotApiError(429, 'Too Many Requests: retry after 0', { retry_after: 0 });
         }
         return 10;
     };
-    // 按 chat_id 升序处理 -14、-13、-12，到 -11 时被限流，保存进度
+    const sentBefore = callsOf('sendMessage').length;
     await onMessage(privateMsg(OWNER, command('/stats members')));
-    assert.match(callsOf('editMessageText').at(-1).text, /已统计 3 \/ 4/);
-    assert.equal(await getChat(-13), null);
 
-    await onMessage(privateMsg(OWNER, command('/stats members')));
-    const text = callsOf('editMessageText').at(-1).text;
-    assert.match(text, /统计群组：4 个\n成员数：30 人\n启用删除马甲消息的群组成员数：10 人\n已清除失效群组：1 个/);
+    // 只发出一条“正在统计”消息，其余均为对它的编辑
+    const sent = callsOf('sendMessage').slice(sentBefore);
+    assert.deepEqual(sent.map((p) => p.text), ['正在统计...']);
+    const edits = callsOf('editMessageText');
+    assert.ok(edits.every((p) => p.message_id === edits[0].message_id));
+    assert.ok(edits.slice(0, -1).length >= 2);
+    assert.ok(edits.slice(0, -1).every((p) => /^统计中 \d+\.\d{2}% \(\d \/ 5\) \.\.\.$/.test(p.text)));
+    assert.match(edits.at(-1).text, /统计群组：5 个\n成员数：30 人\n启用删除马甲消息的群组成员数：10 人\n已清除失效群组：1 个\n获取失败：1 个/);
+    assert.equal(await getChat(-13), null);
 });
 
 test('UTF-8 编解码的后备实现', () => {

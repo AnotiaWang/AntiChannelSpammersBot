@@ -19,11 +19,12 @@ const strings = {
         `${b('🎉 统计信息')}\n加入的群组：${joinedGroups} 个\n启用的群组：${enabledGroups} 个\n` +
         `删除马甲消息的群组：${delGroups} 个\n白名单条目：${whitelistEntries} 条\n待删除的消息：${pendingDeletions} 条\n\n` +
         `发送 ${code('/stats members')} 统计成员数。`,
-    stats_members_progress: (scanned, total) =>
-        `已统计 ${scanned} / ${total} 个群组，请再次发送 ${code('/stats members')} 继续。`,
-    stats_members: ({ joinedMembers, enabledMembers, scanned, removed }) =>
-        `${b('🎉 成员统计')}\n统计群组：${scanned} 个\n成员数：${joinedMembers} 人\n` +
-        `启用删除马甲消息的群组成员数：${enabledMembers} 人\n已清除失效群组：${removed} 个`,
+    stats_members_progress: (processed, total) =>
+        `统计中 ${(total ? processed / total * 100 : 100).toFixed(2)}% (${processed} / ${total}) ...`,
+    stats_members: ({ total, joinedMembers, enabledMembers, removed, skipped }) =>
+        `${b('🎉 成员统计')}\n统计群组：${total} 个\n成员数：${joinedMembers} 人\n` +
+        `启用删除马甲消息的群组成员数：${enabledMembers} 人\n已清除失效群组：${removed} 个` +
+        (skipped ? `\n获取失败：${skipped} 个` : ''),
     welcome_private: `${b('欢迎使用 🎉')}\n\n我可以：\n- 删除群成员以频道身份发送的消息\n- 删除匿名群管理的消息\n- 删除来自关联频道的消息\n- 解除频道消息在群内的置顶\n\n点击下面的按钮，将我添加至群组。\n\n源代码：${link('GitHub', SOURCE_URL)}`,
     welcome_group: '欢迎使用！您可以发送 /on 或 /off 一键开启/关闭反马甲。发送 /config 进行详细的设置，更多用法详见 /help。',
     add_to_group: '点此将我添加到群组',

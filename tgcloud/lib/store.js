@@ -114,22 +114,6 @@ export async function claimDueDeletions(limit) {
     return rows.map((r) => ({ chatId: r.chat_id, messageId: r.message_id, deleteAt: r.delete_at }));
 }
 
-export async function kvGet(key) {
-    const row = await db.get('SELECT value FROM kv WHERE key = :k', { ':k': key });
-    return row && row.value != null ? JSON.parse(row.value) : null;
-}
-
-export async function kvSet(key, value) {
-    await db.run(
-        'INSERT INTO kv (key, value) VALUES (:k, :v) ON CONFLICT (key) DO UPDATE SET value = excluded.value',
-        { ':k': key, ':v': JSON.stringify(value) }
-    );
-}
-
-export async function kvDelete(key) {
-    await db.run('DELETE FROM kv WHERE key = :k', { ':k': key });
-}
-
 export async function getCounts() {
     const anyOn = Object.values(SETTING_COLUMNS).join(' OR ');
     const row = await db.get(`SELECT
@@ -145,19 +129,6 @@ export async function getCounts() {
         whitelistEntries: row.whitelist_entries,
         pendingDeletions: row.pending_deletions
     };
-}
-
-// 按 chat_id 升序分页遍历群组，用于可续传的统计
-export async function listChatsAfter(cursor, limit) {
-    const rows = cursor == null
-        ? await db.all('SELECT * FROM chats ORDER BY chat_id LIMIT :l', { ':l': limit })
-        : await db.all('SELECT * FROM chats WHERE chat_id > :c ORDER BY chat_id LIMIT :l', { ':c': cursor, ':l': limit });
-    return rows.map(rowToChat);
-}
-
-export async function countChats() {
-    const row = await db.get('SELECT count(*) AS n FROM chats');
-    return row.n;
 }
 
 export async function allChats() {

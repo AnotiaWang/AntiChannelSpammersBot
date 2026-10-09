@@ -3,7 +3,7 @@ import { ADMIN_ID, COMMAND_DELETE_DELAY, NOTICE_DELETE_DELAY } from './config.js
 import strings from './strings.js';
 import { addToWhitelist, getCounts, removeFromWhitelist, setSetting } from './store.js';
 import { generateKeyboard } from './keyboard.js';
-import { countMembers, resetMemberStats } from './stats.js';
+import { countMembers } from './stats.js';
 import { exportChatsList, importChatsList } from './transfer.js';
 import {
     alert, decodeUtf8, deleteLater, deleteMessage, encodeUtf8, errorText, getMe, isAdmin, isGroup, log, reply
@@ -172,26 +172,22 @@ const GeneralCommands = {
 };
 
 const OwnerCommands = {
-    // /stats：数据库统计；/stats members：统计成员数（可分多次完成）；/stats reset：重新开始成员统计
+    // /stats：数据库统计；/stats members：统计成员数，进度更新在同一条消息中
     async stats(msg, cmd) {
         const chatId = msg.chat.id;
-        const mode = cmd.args[0];
-        if (mode === 'reset') {
-            await resetMemberStats();
-            await reply(chatId, strings.settings_saved);
+        if (cmd.args[0] !== 'members') {
+            await reply(chatId, strings.stats(await getCounts()));
+            return;
         }
-        else if (mode === 'members') {
-            const progress = await reply(chatId, strings.analyzing);
-            const result = await countMembers();
-            const text = result.done
-                ? strings.stats_members(result)
-                : strings.stats_members_progress(result.scanned, result.total);
-            if (progress) {
-                await api.editMessageText({ chat_id: chatId, message_id: progress.message_id, text, parse_mode: 'HTML' });
-            }
-            log(`Analytics: 已统计 ${result.scanned} / ${result.total}`);
-        }
-        else await reply(chatId, strings.stats(await getCounts()));
+        const progress = await reply(chatId, strings.analyzing);
+        const edit = (text) => progress && api.editMessageText({
+            chat_id: chatId, message_id: progress.message_id, text, parse_mode: 'HTML'
+        }).catch(() => null);
+
+        log('Analytics: 开始统计...');
+        const result = await countMembers((processed, total) => edit(strings.stats_members_progress(processed, total)));
+        await edit(strings.stats_members(result));
+        log('Analytics: 统计完成');
     },
 
     // 导出为 chatsList.json，格式与旧版相同

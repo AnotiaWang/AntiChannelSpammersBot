@@ -29,8 +29,8 @@ export const pendingDeletions = table('pending_deletions', {
     deleteAtIdx: index('idx_pending_deletions_delete_at').on(t.deleteAt)
 }));
 
-// 杂项状态，如 /stats 的统计进度
+// 已弃用：曾用于保存分段统计的进度。执行 migrate 删除此表后，即可移除这段声明
 export const kv = table('kv', {
     key: text('key').primaryKey(),
     value: json('value')
-});
+}).deprecated('/stats members 不再分段统计');
